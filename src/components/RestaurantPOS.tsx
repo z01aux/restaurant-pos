@@ -225,180 +225,183 @@ const RestaurantPOS: React.FC = () => {
   }, []);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 py-8 px-4">
-      {/* Header */}
-      <div className="max-w-6xl mx-auto mb-8 text-center">
-        <div className="inline-flex items-center gap-3 bg-white rounded-2xl px-6 py-4 shadow-sm border border-gray-200">
-          <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-purple-600 rounded-xl flex items-center justify-center">
-            <span className="text-white font-bold text-lg">🍽️</span>
-          </div>
-          <div className="text-left">
-            <h1 className="text-2xl font-bold text-gray-900">Restaurant Mary's</h1>
-            <p className="text-gray-600 text-sm">Sistema de Punto de Venta</p>
-          </div>
-        </div>
-      </div>
-
-      {/* Main Content */}
-      <div className="max-w-6xl mx-auto">
-        {/* Alert */}
-        {alertMessage && (
-          <div className={`mb-6 p-4 rounded-xl border-l-4 ${
-            alertMessage.type === 'success' 
-              ? 'bg-green-50 border-green-500 text-green-800' 
-              : 'bg-red-50 border-red-500 text-red-800'
-          }`}>
-            <div className="flex items-center gap-2">
-              <span>{alertMessage.type === 'success' ? '✅' : '⚠️'}</span>
-              <span className="font-medium">{alertMessage.text}</span>
+    <>
+      {/* VISTA EN PANTALLA - SE OCULTA AL IMPRIMIR */}
+      <div className="screen-container min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 py-8 px-4 print:hidden">
+        {/* Header */}
+        <div className="max-w-6xl mx-auto mb-8 text-center">
+          <div className="inline-flex items-center gap-3 bg-white rounded-2xl px-6 py-4 shadow-sm border border-gray-200">
+            <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-purple-600 rounded-xl flex items-center justify-center">
+              <span className="text-white font-bold text-lg">🍽️</span>
+            </div>
+            <div className="text-left">
+              <h1 className="text-2xl font-bold text-gray-900">Restaurant Mary's</h1>
+              <p className="text-gray-600 text-sm">Sistema de Punto de Venta</p>
             </div>
           </div>
-        )}
+        </div>
 
-        {/* Client Table */}
-        <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden mb-6">
-          <div className="px-6 py-4 border-b border-gray-200">
-            <h2 className="text-lg font-semibold text-gray-900">Registro de Ventas</h2>
-            <p className="text-gray-600 text-sm">Complete la información de los clientes</p>
-          </div>
-          
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead>
-                <tr className="bg-gray-50 border-b border-gray-200">
-                  <th className="py-3 px-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">#</th>
-                  <th className="py-3 px-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Cliente</th>
-                  <th className="py-3 px-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Método de Pago</th>
-                  <th className="py-3 px-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Monto (S/)</th>
-                  <th className="py-3 px-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Acciones</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-200">
-                {clients.map((client, index) => (
-                  <tr key={client.id} className="hover:bg-gray-50 transition-colors">
-                    <td className="py-4 px-4 text-sm font-medium text-gray-900">{index + 1}</td>
-                    <td className="py-4 px-4">
-                      <input 
-                        type="text" 
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-                        placeholder="Nombre del cliente"
-                        value={client.name}
-                        onChange={(e) => handleNameChange(client.id, e.target.value)}
-                      />
-                    </td>
-                    <td className="py-4 px-4">
-                      <div className="flex gap-2">
-                        <PaymentOption 
-                          value="efectivo"
-                          label="Efectivo"
-                          selected={client.paymentMethod === 'efectivo'}
-                          onSelect={() => handlePaymentChange(client.id, 'efectivo')}
-                        />
-                        <PaymentOption 
-                          value="yape"
-                          label="Yape"
-                          selected={client.paymentMethod === 'yape'}
-                          onSelect={() => handlePaymentChange(client.id, 'yape')}
-                        />
-                      </div>
-                    </td>
-                    <td className="py-4 px-4">
-                      <input 
-                        type="text" 
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm text-right font-medium focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-                        placeholder="0.00"
-                        value={client.amount}
-                        onChange={(e) => handleAmountChange(client.id, e.target.value)}
-                        onBlur={(e) => handleAmountBlur(client.id, e.target.value)}
-                      />
-                    </td>
-                    <td className="py-4 px-4">
-                      <button 
-                        className="inline-flex items-center justify-center w-8 h-8 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
-                        onClick={() => deleteRow(client.id)}
-                        title="Eliminar fila"
-                      >
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                        </svg>
-                      </button>
-                    </td>
+        {/* Main Content */}
+        <div className="max-w-6xl mx-auto">
+          {/* Alert */}
+          {alertMessage && (
+            <div className={`mb-6 p-4 rounded-xl border-l-4 ${
+              alertMessage.type === 'success' 
+                ? 'bg-green-50 border-green-500 text-green-800' 
+                : 'bg-red-50 border-red-500 text-red-800'
+            }`}>
+              <div className="flex items-center gap-2">
+                <span>{alertMessage.type === 'success' ? '✅' : '⚠️'}</span>
+                <span className="font-medium">{alertMessage.text}</span>
+              </div>
+            </div>
+          )}
+
+          {/* Client Table */}
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden mb-6">
+            <div className="px-6 py-4 border-b border-gray-200">
+              <h2 className="text-lg font-semibold text-gray-900">Registro de Ventas</h2>
+              <p className="text-gray-600 text-sm">Complete la información de los clientes</p>
+            </div>
+            
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead>
+                  <tr className="bg-gray-50 border-b border-gray-200">
+                    <th className="py-3 px-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">#</th>
+                    <th className="py-3 px-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Cliente</th>
+                    <th className="py-3 px-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Método de Pago</th>
+                    <th className="py-3 px-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Monto (S/)</th>
+                    <th className="py-3 px-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Acciones</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
-
-        {/* Action Buttons */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-          <button 
-            className="flex items-center justify-center gap-2 px-6 py-3 bg-white border border-gray-300 rounded-xl text-gray-700 font-medium hover:bg-gray-50 hover:border-gray-400 transition-all duration-200 shadow-sm"
-            onClick={addRow}
-          >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-            </svg>
-            Agregar Cliente
-          </button>
-          
-          <button 
-            className="flex items-center justify-center gap-2 px-6 py-3 bg-white border border-gray-300 rounded-xl text-gray-700 font-medium hover:bg-gray-50 hover:border-gray-400 transition-all duration-200 shadow-sm"
-            onClick={clearAll}
-          >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-            </svg>
-            Limpiar Todo
-          </button>
-          
-          <button 
-            className="flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-blue-600 to-blue-700 rounded-xl text-white font-medium hover:from-blue-700 hover:to-blue-800 transition-all duration-200 shadow-lg shadow-blue-500/25"
-            onClick={handlePrint}
-          >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
-            </svg>
-            Imprimir Recibo
-          </button>
-        </div>
-
-        {/* Total Section */}
-        <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-2xl p-6 border border-blue-200 mb-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <h3 className="text-lg font-semibold text-gray-900 mb-1">Total Vendido</h3>
-              <p className="text-gray-600 text-sm">Suma total de todas las ventas</p>
+                </thead>
+                <tbody className="divide-y divide-gray-200">
+                  {clients.map((client, index) => (
+                    <tr key={client.id} className="hover:bg-gray-50 transition-colors">
+                      <td className="py-4 px-4 text-sm font-medium text-gray-900">{index + 1}</td>
+                      <td className="py-4 px-4">
+                        <input 
+                          type="text" 
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                          placeholder="Nombre del cliente"
+                          value={client.name}
+                          onChange={(e) => handleNameChange(client.id, e.target.value)}
+                        />
+                      </td>
+                      <td className="py-4 px-4">
+                        <div className="flex gap-2">
+                          <PaymentOption 
+                            value="efectivo"
+                            label="Efectivo"
+                            selected={client.paymentMethod === 'efectivo'}
+                            onSelect={() => handlePaymentChange(client.id, 'efectivo')}
+                          />
+                          <PaymentOption 
+                            value="yape"
+                            label="Yape"
+                            selected={client.paymentMethod === 'yape'}
+                            onSelect={() => handlePaymentChange(client.id, 'yape')}
+                          />
+                        </div>
+                      </td>
+                      <td className="py-4 px-4">
+                        <input 
+                          type="text" 
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm text-right font-medium focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                          placeholder="0.00"
+                          value={client.amount}
+                          onChange={(e) => handleAmountChange(client.id, e.target.value)}
+                          onBlur={(e) => handleAmountBlur(client.id, e.target.value)}
+                        />
+                      </td>
+                      <td className="py-4 px-4">
+                        <button 
+                          className="inline-flex items-center justify-center w-8 h-8 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                          onClick={() => deleteRow(client.id)}
+                          title="Eliminar fila"
+                        >
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                          </svg>
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
-            <div className="text-right">
-              <div className="text-3xl font-bold text-blue-700">S/ {total.toFixed(2)}</div>
-              <div className="text-sm text-gray-600 mt-1">{clients.length} cliente(s)</div>
-            </div>
           </div>
-        </div>
 
-        {/* Instructions */}
-        <div className="bg-amber-50 rounded-2xl p-6 border border-amber-200">
-          <div className="flex items-start gap-3">
-            <div className="w-6 h-6 bg-amber-500 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
-              <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
-                <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+          {/* Action Buttons */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+            <button 
+              className="flex items-center justify-center gap-2 px-6 py-3 bg-white border border-gray-300 rounded-xl text-gray-700 font-medium hover:bg-gray-50 hover:border-gray-400 transition-all duration-200 shadow-sm"
+              onClick={addRow}
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
               </svg>
+              Agregar Cliente
+            </button>
+            
+            <button 
+              className="flex items-center justify-center gap-2 px-6 py-3 bg-white border border-gray-300 rounded-xl text-gray-700 font-medium hover:bg-gray-50 hover:border-gray-400 transition-all duration-200 shadow-sm"
+              onClick={clearAll}
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+              </svg>
+              Limpiar Todo
+            </button>
+            
+            <button 
+              className="flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-blue-600 to-blue-700 rounded-xl text-white font-medium hover:from-blue-700 hover:to-blue-800 transition-all duration-200 shadow-lg shadow-blue-500/25"
+              onClick={handlePrint}
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
+              </svg>
+              Imprimir Recibo
+            </button>
+          </div>
+
+          {/* Total Section */}
+          <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-2xl p-6 border border-blue-200 mb-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900 mb-1">Total Vendido</h3>
+                <p className="text-gray-600 text-sm">Suma total de todas las ventas</p>
+              </div>
+              <div className="text-right">
+                <div className="text-3xl font-bold text-blue-700">S/ {total.toFixed(2)}</div>
+                <div className="text-sm text-gray-600 mt-1">{clients.length} cliente(s)</div>
+              </div>
             </div>
-            <div>
-              <h4 className="font-semibold text-amber-900 mb-2">Instrucciones de Uso</h4>
-              <ul className="text-amber-800 text-sm space-y-1">
-                <li>• Complete el nombre del cliente y el monto de compra</li>
-                <li>• Seleccione el método de pago (Efectivo o Yape)</li>
-                <li>• Agregue más clientes con el botón "Agregar Cliente"</li>
-                <li>• Presione "Imprimir Recibo" para generar el ticket POS</li>
-              </ul>
+          </div>
+
+          {/* Instructions */}
+          <div className="bg-amber-50 rounded-2xl p-6 border border-amber-200">
+            <div className="flex items-start gap-3">
+              <div className="w-6 h-6 bg-amber-500 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+                </svg>
+              </div>
+              <div>
+                <h4 className="font-semibold text-amber-900 mb-2">Instrucciones de Uso</h4>
+                <ul className="text-amber-800 text-sm space-y-1">
+                  <li>• Complete el nombre del cliente y el monto de compra</li>
+                  <li>• Seleccione el método de pago (Efectivo o Yape)</li>
+                  <li>• Agregue más clientes con el botón "Agregar Cliente"</li>
+                  <li>• Presione "Imprimir Recibo" para generar el ticket POS</li>
+                </ul>
+              </div>
             </div>
           </div>
         </div>
       </div>
 
-      {/* VISTA PARA IMPRESIÓN POS - CORREGIDA */}
+      {/* VISTA PARA IMPRESIÓN POS - SOLO SE MUESTRA AL IMPRIMIR */}
       <div className="pos-container hidden print:block w-[80mm] bg-white p-[5mm] mx-auto font-mono text-[11px] leading-tight box-border">
         <div className="pos-header text-center border-b-2 border-black py-3 mb-2">
           <div className="pos-title text-lg font-bold mb-2 tracking-widest">MARY'S RESTAURANT</div>
@@ -431,7 +434,120 @@ const RestaurantPOS: React.FC = () => {
           <div style={{ height: '15mm' }}></div>
         </div>
       </div>
-    </div>
+
+      {/* ESTILOS DE IMPRESIÓN EN COMPONENTE */}
+      <style>{`
+        @media print {
+          * {
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+          }
+          body {
+            background: white !important;
+            padding: 0 !important;
+            margin: 0 !important;
+            width: 80mm !important;
+            min-height: auto !important;
+            height: auto !important;
+          }
+          .screen-container {
+            display: none !important;
+          }
+          .pos-container {
+            display: block !important;
+            width: 80mm !important;
+            padding: 5mm !important;
+            padding-bottom: 0 !important;
+            margin: 0 !important;
+            font-family: 'Courier New', monospace !important;
+            font-size: 11px !important;
+            line-height: 1.4 !important;
+            box-sizing: border-box !important;
+          }
+          .pos-header {
+            page-break-inside: avoid !important;
+          }
+          .client-row {
+            page-break-inside: avoid !important;
+          }
+          .pos-footer {
+            page-break-inside: avoid !important;
+            margin-top: 15px !important;
+            padding-bottom: 0 !important;
+            margin-bottom: 0 !important;
+          }
+          .pos-footer::after {
+            content: "";
+            display: block;
+            page-break-after: always !important;
+          }
+        }
+        
+        @page {
+          size: 80mm auto;
+          margin: 0;
+          margin-bottom: 0;
+        }
+
+        .pos-container {
+          display: none;
+        }
+
+        .client-row {
+          display: flex;
+          border-bottom: 1px dotted #999;
+          padding: 8px 0;
+          font-size: 10px;
+          line-height: 1.5;
+          min-height: 32px;
+          align-items: center;
+        }
+        .client-number {
+          width: 10%;
+          text-align: center;
+          font-weight: bold;
+        }
+        .client-name {
+          width: 45%;
+          padding: 0 5px;
+          word-break: break-word;
+          line-height: 1.4;
+          font-weight: bold;
+        }
+        .client-payment {
+          width: 20%;
+          text-align: center;
+          line-height: 1.4;
+        }
+        .client-amount {
+          width: 25%;
+          text-align: right;
+          padding-right: 5px;
+          font-weight: bold;
+          line-height: 1.4;
+        }
+        .payment-option-print {
+          border: 1.5px solid #000;
+          padding: 3px 6px;
+          font-size: 8px;
+          display: inline-block;
+          min-width: 45px;
+          font-weight: bold;
+        }
+        .payment-option-print.yape {
+          border: 2px solid #000;
+        }
+        .payment-option-print.efectivo {
+          border: 2px solid #000;
+        }
+        .header-row {
+          font-weight: bold;
+          border-bottom: 2px solid #000 !important;
+          background: none !important;
+          padding: 10px 0 !important;
+        }
+      `}</style>
+    </>
   );
 };
 
