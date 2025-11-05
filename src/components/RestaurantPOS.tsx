@@ -552,3 +552,4 @@ const RestaurantPOS: React.FC = () => {
 };
 
 export default RestaurantPOS;
+
