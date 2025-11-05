@@ -452,7 +452,7 @@ const RestaurantPOS: React.FC = () => {
             color: '#666',
             paddingTop: '5px'
           }}>
-            --- CORTAR AQUÍ ---
+            ------------
           </div>
         </div>
       </div>
@@ -579,4 +579,5 @@ const RestaurantPOS: React.FC = () => {
 };
 
 export default RestaurantPOS;
+
 
