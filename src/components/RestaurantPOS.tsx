@@ -415,9 +415,9 @@ const RestaurantPOS: React.FC = () => {
       <div className="pos-container hidden print:block w-[80mm] bg-white p-[5mm] mx-auto font-mono text-[11px] leading-tight box-border">
         <div className="pos-header text-center border-b-2 border-black py-3 mb-2">
           <div className="pos-title text-lg font-bold mb-2 tracking-widest">MARY'S RESTAURANT</div>
-          <div className="pos-subtitle text-[15px]">RUC: 20505262086</div>
-          <div className="pos-subtitle text-[15px]">Fecha: {currentDateTime.date}</div>
-          <div className="pos-subtitle text-[15px]">Hora: {currentDateTime.time}</div>
+          <div className="pos-subtitle text-[11px]">RUC: 20505262086</div>
+          <div className="pos-subtitle text-[11px]">Fecha: {currentDateTime.date}</div>
+          <div className="pos-subtitle text-[11px]">Hora: {currentDateTime.time}</div>
         </div>
         
         <div className="client-row header-row flex border-b-2 border-black py-2 font-bold">
@@ -562,4 +562,5 @@ const RestaurantPOS: React.FC = () => {
 };
 
 export default RestaurantPOS;
+
 
