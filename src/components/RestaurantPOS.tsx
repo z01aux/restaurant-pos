@@ -12,12 +12,13 @@ interface PaymentOptionProps {
   label: string;
   selected: boolean;
   onSelect: () => void;
+  compact?: boolean;
 }
 
-const PaymentOption: React.FC<PaymentOptionProps> = ({ value, label, selected, onSelect }) => {
+const PaymentOption: React.FC<PaymentOptionProps> = ({ value, label, selected, onSelect, compact = false }) => {
   return (
     <button
-      className={`px-4 py-2 rounded-lg font-sans font-medium transition-all duration-200 border text-sm ${
+      className={`${compact ? 'px-3 py-1.5 text-xs' : 'px-4 py-2 text-sm'} rounded-lg font-medium transition-all duration-200 border ${
         selected
           ? value === 'efectivo'
             ? 'border-emerald-500 bg-emerald-500 text-white shadow-sm'
@@ -223,17 +224,17 @@ const RestaurantPOS: React.FC = () => {
   return (
     <>
       {/* VISTA EN PANTALLA - SE OCULTA AL IMPRIMIR */}
-      <div className="screen-container min-h-screen bg-gradient-to-br from-slate-50 to-gray-100 py-8 px-4 print:hidden font-sans">
-        {/* Header Mejorado con Tipografía Amazon */}
-        <div className="max-w-4xl mx-auto mb-8">
+      <div className="screen-container min-h-screen bg-gradient-to-br from-slate-50 to-gray-100 py-4 px-3 sm:py-8 sm:px-4 print:hidden font-sans">
+        {/* Header Responsive */}
+        <div className="max-w-4xl mx-auto mb-6 sm:mb-8">
           <div className="text-center">
-            <div className="inline-flex items-center justify-center gap-3 bg-white rounded-2xl px-8 py-6 shadow-sm border border-gray-200 mb-4">
-              <div className="w-14 h-14 bg-gradient-to-br from-slate-800 to-slate-900 rounded-xl flex items-center justify-center">
-                <span className="text-white text-2xl">🍽️</span>
+            <div className="inline-flex flex-col sm:flex-row items-center justify-center gap-3 bg-white rounded-2xl px-4 py-4 sm:px-8 sm:py-6 shadow-sm border border-gray-200 mb-4 w-full">
+              <div className="w-12 h-12 sm:w-14 sm:h-14 bg-gradient-to-br from-slate-800 to-slate-900 rounded-xl flex items-center justify-center">
+                <span className="text-white text-xl sm:text-2xl">🍽️</span>
               </div>
-              <div>
-                <h1 className="text-3xl font-bold text-gray-900 tracking-tight">MARY'S RESTAURANT </h1>
-                <p className="text-gray-600 text-sm mt-1 font-normal">Sistema de registro de ventas</p>
+              <div className="text-center sm:text-left mt-2 sm:mt-0">
+                <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 tracking-tight">MARY'S RESTAURANT</h1>
+                <p className="text-gray-600 text-xs sm:text-sm mt-1 font-normal">Sistema de registro de ventas</p>
               </div>
             </div>
           </div>
@@ -241,9 +242,9 @@ const RestaurantPOS: React.FC = () => {
 
         {/* Main Content */}
         <div className="max-w-4xl mx-auto">
-          {/* Alert Mejorado */}
+          {/* Alert Responsive */}
           {alertMessage && (
-            <div className={`mb-6 p-4 rounded-xl border ${
+            <div className={`mb-4 sm:mb-6 p-3 sm:p-4 rounded-xl border ${
               alertMessage.type === 'success' 
                 ? 'bg-emerald-50 border-emerald-200 text-emerald-800' 
                 : 'bg-rose-50 border-rose-200 text-rose-800'
@@ -257,70 +258,73 @@ const RestaurantPOS: React.FC = () => {
             </div>
           )}
 
-          {/* Client Table Mejorada */}
-          <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden mb-6">
-            <div className="px-6 py-5 border-b border-gray-200 bg-gray-50">
-              <h2 className="text-xl font-semibold text-gray-900 text-center tracking-tight">Registro de Ventas</h2>
-              <p className="text-gray-600 text-sm text-center mt-1 font-normal">Complete la información de los clientes</p>
+          {/* Client Table Responsive */}
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden mb-4 sm:mb-6">
+            <div className="px-4 py-4 sm:px-6 sm:py-5 border-b border-gray-200 bg-gray-50">
+              <h2 className="text-lg sm:text-xl font-semibold text-gray-900 text-center tracking-tight">Registro de Ventas</h2>
+              <p className="text-gray-600 text-xs sm:text-sm text-center mt-1 font-normal">Complete la información de los clientes</p>
             </div>
             
-            <div className="overflow-x-auto">
+            {/* Vista Desktop (tabla) */}
+            <div className="hidden md:block overflow-x-auto">
               <table className="w-full">
                 <thead>
                   <tr className="bg-slate-100 border-b border-gray-300">
-                    <th className="py-4 px-4 text-center text-xs font-semibold text-slate-700 uppercase tracking-wide w-12">#</th>
-                    <th className="py-4 px-4 text-center text-xs font-semibold text-slate-700 uppercase tracking-wide">Cliente</th>
-                    <th className="py-4 px-4 text-center text-xs font-semibold text-slate-700 uppercase tracking-wide w-32">Método de Pago</th>
-                    <th className="py-4 px-4 text-center text-xs font-semibold text-slate-700 uppercase tracking-wide w-28">Monto (S/)</th>
-                    <th className="py-4 px-4 text-center text-xs font-semibold text-slate-700 uppercase tracking-wide w-16">Acciones</th>
+                    <th className="py-3 px-3 sm:py-4 sm:px-4 text-center text-xs font-semibold text-slate-700 uppercase tracking-wide w-12">#</th>
+                    <th className="py-3 px-3 sm:py-4 sm:px-4 text-center text-xs font-semibold text-slate-700 uppercase tracking-wide">Cliente</th>
+                    <th className="py-3 px-3 sm:py-4 sm:px-4 text-center text-xs font-semibold text-slate-700 uppercase tracking-wide w-28 sm:w-32">Pago</th>
+                    <th className="py-3 px-3 sm:py-4 sm:px-4 text-center text-xs font-semibold text-slate-700 uppercase tracking-wide w-24 sm:w-28">Monto (S/)</th>
+                    <th className="py-3 px-3 sm:py-4 sm:px-4 text-center text-xs font-semibold text-slate-700 uppercase tracking-wide w-14 sm:w-16">Acciones</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-200">
                   {clients.map((client, index) => (
                     <tr key={client.id} className="hover:bg-slate-50 transition-colors">
-                      <td className="py-4 px-4 text-sm font-medium text-gray-900 text-center">{index + 1}</td>
-                      <td className="py-4 px-4">
+                      <td className="py-3 px-3 sm:py-4 sm:px-4 text-sm font-medium text-gray-900 text-center">{index + 1}</td>
+                      <td className="py-3 px-3 sm:py-4 sm:px-4">
                         <input 
                           type="text" 
-                          className="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-slate-500 focus:border-transparent transition-all text-center font-normal"
+                          className="w-full px-2 py-2 sm:px-3 sm:py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-slate-500 focus:border-transparent transition-all text-center font-normal"
                           placeholder="Nombre del cliente"
                           value={client.name}
                           onChange={(e) => handleNameChange(client.id, e.target.value)}
                         />
                       </td>
-                      <td className="py-4 px-4">
-                        <div className="flex justify-center gap-2">
+                      <td className="py-3 px-3 sm:py-4 sm:px-4">
+                        <div className="flex justify-center gap-1 sm:gap-2">
                           <PaymentOption 
                             value="efectivo"
                             label="Efectivo"
                             selected={client.paymentMethod === 'efectivo'}
                             onSelect={() => handlePaymentChange(client.id, 'efectivo')}
+                            compact
                           />
                           <PaymentOption 
                             value="yape"
                             label="Yape"
                             selected={client.paymentMethod === 'yape'}
                             onSelect={() => handlePaymentChange(client.id, 'yape')}
+                            compact
                           />
                         </div>
                       </td>
-                      <td className="py-4 px-4 text-center w-28">
+                      <td className="py-3 px-3 sm:py-4 sm:px-4 text-center w-24 sm:w-28">
                         <input 
                           type="text" 
-                          className="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm text-center font-medium focus:outline-none focus:ring-2 focus:ring-slate-500 focus:border-transparent transition-all"
+                          className="w-full px-2 py-2 sm:px-3 sm:py-2.5 border border-gray-300 rounded-lg text-sm text-center font-medium focus:outline-none focus:ring-2 focus:ring-slate-500 focus:border-transparent transition-all"
                           placeholder="0.00"
                           value={client.amount}
                           onChange={(e) => handleAmountChange(client.id, e.target.value)}
                           onBlur={(e) => handleAmountBlur(client.id, e.target.value)}
                         />
                       </td>
-                      <td className="py-4 px-4 text-center">
+                      <td className="py-3 px-3 sm:py-4 sm:px-4 text-center">
                         <button 
-                          className="inline-flex items-center justify-center w-10 h-10 text-gray-400 hover:text-rose-500 hover:bg-rose-50 rounded-lg transition-colors"
+                          className="inline-flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 text-gray-400 hover:text-rose-500 hover:bg-rose-50 rounded-lg transition-colors"
                           onClick={() => deleteRow(client.id)}
                           title="Eliminar fila"
                         >
-                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                           </svg>
                         </button>
@@ -330,78 +334,146 @@ const RestaurantPOS: React.FC = () => {
                 </tbody>
               </table>
             </div>
+
+            {/* Vista Mobile (cards) */}
+            <div className="md:hidden space-y-3 p-3">
+              {clients.map((client, index) => (
+                <div key={client.id} className="bg-white border border-gray-200 rounded-lg p-4 shadow-sm">
+                  <div className="flex items-center justify-between mb-3">
+                    <span className="text-sm font-medium text-gray-900">Cliente #{index + 1}</span>
+                    <button 
+                      className="inline-flex items-center justify-center w-8 h-8 text-gray-400 hover:text-rose-500 hover:bg-rose-50 rounded-lg transition-colors"
+                      onClick={() => deleteRow(client.id)}
+                      title="Eliminar fila"
+                    >
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                      </svg>
+                    </button>
+                  </div>
+                  
+                  <div className="space-y-3">
+                    <div>
+                      <label className="block text-xs text-gray-600 mb-1">Nombre del Cliente</label>
+                      <input 
+                        type="text" 
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-slate-500 focus:border-transparent transition-all font-normal"
+                        placeholder="Escriba el nombre"
+                        value={client.name}
+                        onChange={(e) => handleNameChange(client.id, e.target.value)}
+                      />
+                    </div>
+                    
+                    <div>
+                      <label className="block text-xs text-gray-600 mb-1">Método de Pago</label>
+                      <div className="flex gap-2">
+                        <PaymentOption 
+                          value="efectivo"
+                          label="Efectivo"
+                          selected={client.paymentMethod === 'efectivo'}
+                          onSelect={() => handlePaymentChange(client.id, 'efectivo')}
+                          compact
+                        />
+                        <PaymentOption 
+                          value="yape"
+                          label="Yape"
+                          selected={client.paymentMethod === 'yape'}
+                          onSelect={() => handlePaymentChange(client.id, 'yape')}
+                          compact
+                        />
+                      </div>
+                    </div>
+                    
+                    <div>
+                      <label className="block text-xs text-gray-600 mb-1">Monto (S/)</label>
+                      <input 
+                        type="text" 
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm text-center font-medium focus:outline-none focus:ring-2 focus:ring-slate-500 focus:border-transparent transition-all"
+                        placeholder="0.00"
+                        value={client.amount}
+                        onChange={(e) => handleAmountChange(client.id, e.target.value)}
+                        onBlur={(e) => handleAmountBlur(client.id, e.target.value)}
+                      />
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
 
-          {/* Action Buttons Mejorados */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+          {/* Action Buttons Responsive */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 mb-6 sm:mb-8">
             <button 
-              className="flex items-center justify-center gap-3 px-6 py-4 bg-white border border-gray-300 rounded-xl text-gray-700 font-medium hover:bg-gray-50 hover:border-gray-400 transition-all duration-200 shadow-sm text-sm"
+              className="flex items-center justify-center gap-2 sm:gap-3 px-4 py-3 sm:px-6 sm:py-4 bg-white border border-gray-300 rounded-xl text-gray-700 font-medium hover:bg-gray-50 hover:border-gray-400 transition-all duration-200 shadow-sm text-sm"
               onClick={addRow}
             >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
               </svg>
-              Agregar Cliente
+              <span className="hidden sm:inline">Agregar Cliente</span>
+              <span className="sm:hidden">Agregar</span>
             </button>
             
             <button 
-              className="flex items-center justify-center gap-3 px-6 py-4 bg-white border border-gray-300 rounded-xl text-gray-700 font-medium hover:bg-gray-50 hover:border-gray-400 transition-all duration-200 shadow-sm text-sm"
+              className="flex items-center justify-center gap-2 sm:gap-3 px-4 py-3 sm:px-6 sm:py-4 bg-white border border-gray-300 rounded-xl text-gray-700 font-medium hover:bg-gray-50 hover:border-gray-400 transition-all duration-200 shadow-sm text-sm"
               onClick={clearAll}
             >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
               </svg>
-              Limpiar Todo
+              <span className="hidden sm:inline">Limpiar Todo</span>
+              <span className="sm:hidden">Limpiar</span>
             </button>
             
             <button 
-              className="flex items-center justify-center gap-3 px-6 py-4 bg-gradient-to-r from-slate-800 to-slate-900 rounded-xl text-white font-medium hover:from-slate-900 hover:to-slate-950 transition-all duration-200 shadow-lg shadow-slate-500/25 text-sm"
+              className="flex items-center justify-center gap-2 sm:gap-3 px-4 py-3 sm:px-6 sm:py-4 bg-gradient-to-r from-slate-800 to-slate-900 rounded-xl text-white font-medium hover:from-slate-900 hover:to-slate-950 transition-all duration-200 shadow-lg shadow-slate-500/25 text-sm"
               onClick={handlePrint}
             >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
               </svg>
-              Imprimir Recibo
+              <span className="hidden sm:inline">Imprimir Recibo</span>
+              <span className="sm:hidden">Imprimir</span>
             </button>
           </div>
 
-          {/* Total Section Mejorado */}
-          <div className="bg-gradient-to-r from-slate-100 to-slate-200 rounded-2xl p-8 border border-slate-300 mb-8">
+          {/* Total Section Responsive */}
+          <div className="bg-gradient-to-r from-slate-100 to-slate-200 rounded-2xl p-6 sm:p-8 border border-slate-300 mb-6 sm:mb-8">
             <div className="flex flex-col items-center text-center">
-              <h3 className="text-2xl font-semibold text-slate-800 mb-2 tracking-tight">Total Vendido</h3>
-              <p className="text-slate-600 text-sm mb-4 font-normal">Suma total de todas las ventas</p>
-              <div className="text-4xl font-bold text-slate-900 tracking-tight">S/ {total.toFixed(2)}</div>
-              <div className="text-sm text-slate-600 mt-3 bg-white px-3 py-1 rounded-full border border-slate-300 font-normal">
+              <h3 className="text-xl sm:text-2xl font-semibold text-slate-800 mb-2 tracking-tight">Total Vendido</h3>
+              <p className="text-slate-600 text-xs sm:text-sm mb-3 sm:mb-4 font-normal">Suma total de todas las ventas</p>
+              <div className="text-3xl sm:text-4xl font-bold text-slate-900 tracking-tight">S/ {total.toFixed(2)}</div>
+              <div className="text-xs sm:text-sm text-slate-600 mt-2 sm:mt-3 bg-white px-3 py-1 rounded-full border border-slate-300 font-normal">
                 {clients.length} cliente(s) registrado(s)
               </div>
             </div>
           </div>
 
-          {/* Instructions Mejorado */}
-          <div className="bg-slate-100 rounded-2xl p-6 border border-slate-300">
-            <div className="flex items-start gap-4">
-              <div className="w-8 h-8 bg-slate-800 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
-                <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
+          {/* Instructions Responsive */}
+          <div className="bg-slate-100 rounded-2xl p-4 sm:p-6 border border-slate-300">
+            <div className="flex items-start gap-3 sm:gap-4">
+              <div className="w-6 h-6 sm:w-8 sm:h-8 bg-slate-800 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                <svg className="w-3 h-3 sm:w-4 sm:h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
                   <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
                 </svg>
               </div>
               <div className="flex-1">
-                <h4 className="font-semibold text-slate-900 text-lg mb-3 tracking-tight">Instrucciones de Uso</h4>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-slate-700 text-sm">
+                <h4 className="font-semibold text-slate-900 text-base sm:text-lg mb-2 sm:mb-3 tracking-tight">Instrucciones de Uso</h4>
+                <div className="grid grid-cols-1 gap-2 sm:gap-3 text-slate-700 text-xs sm:text-sm">
                   <div className="flex items-center gap-2">
-                    <div className="w-2 h-2 bg-slate-600 rounded-full"></div>
+                    <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-slate-600 rounded-full"></div>
                     <span className="font-normal">Complete el nombre del cliente y el monto</span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <div className="w-2 h-2 bg-slate-600 rounded-full"></div>
+                    <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-slate-600 rounded-full"></div>
                     <span className="font-normal">Seleccione el método de pago</span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <div className="w-2 h-2 bg-slate-600 rounded-full"></div>
+                    <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-slate-600 rounded-full"></div>
                     <span className="font-normal">Agregue más clientes si es necesario</span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <div className="w-2 h-2 bg-slate-600 rounded-full"></div>
+                    <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-slate-600 rounded-full"></div>
                     <span className="font-normal">Presione "Imprimir Recibo" para el ticket</span>
                   </div>
                 </div>
@@ -414,7 +486,7 @@ const RestaurantPOS: React.FC = () => {
       {/* VISTA PARA IMPRESIÓN POS - SOLO SE MUESTRA AL IMPRIMIR */}
       <div className="pos-container hidden print:block w-[80mm] bg-white p-[5mm] mx-auto font-mono text-[11px] leading-tight box-border">
         <div className="pos-header text-center border-b-2 border-black py-3 mb-2">
-          <div className="pos-title text-lg font-bold mb-2 tracking-widest">MARY'S RESTAURANT </div>
+          <div className="pos-title text-lg font-bold mb-2 tracking-widest">MARY'S RESTAURANT</div>
           <div className="pos-subtitle text-[10px]">RUC: 20505262086</div>
           <div className="pos-subtitle text-[10px]">Fecha: {currentDateTime.date}</div>
           <div className="pos-subtitle text-[10px]">Hora: {currentDateTime.time}</div>
@@ -432,9 +504,9 @@ const RestaurantPOS: React.FC = () => {
         </div>
         
         <div className="pos-total text-right mt-3 pt-2 border-t-2 border-black text-xs font-bold">
-          <div className="pos-total-label text-[11px] mb-1">═══════════════════════</div>
+          <div className="pos-total-label text-[11px] mb-1">======════════════════</div>
           <div className="pos-total-amount text-base" id="posTotalAmount" ref={posTotalAmountRef}>TOTAL: S/ 0.00</div>
-          <div className="pos-total-label text-[11px] mt-1">═══════════════════════</div>
+          <div className="pos-total-label text-[11px] mt-1">======════════════════</div>
         </div>
         
         <div className="pos-footer text-center mt-5 pt-3 border-t-2 border-dashed border-black text-[10px] leading-relaxed">
@@ -452,7 +524,7 @@ const RestaurantPOS: React.FC = () => {
             color: '#666',
             paddingTop: '5px'
           }}>
-            ------------
+            --- CORTAR AQUÍ ---
           </div>
         </div>
       </div>
@@ -536,7 +608,7 @@ const RestaurantPOS: React.FC = () => {
           word-break: break-word;
           line-height: 1.4;
           font-weight: bold;
-          font-size: 12px;
+          font-size: 12px !important;
         }
         .client-payment {
           width: 20%;
@@ -579,5 +651,3 @@ const RestaurantPOS: React.FC = () => {
 };
 
 export default RestaurantPOS;
-
-
