@@ -1,0 +1,57 @@
+@import 'tailwindcss/base';
+@import 'tailwindcss/components';
+@import 'tailwindcss/utilities';
+
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Poppins:wght@400;500;600&display=swap');
+
+@media print {
+  * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+  body {
+    background: white !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    width: 80mm !important;
+    min-height: auto !important;
+    height: auto !important;
+  }
+  .screen-container {
+    display: none !important;
+  }
+  .pos-container {
+    display: block !important;
+    width: 80mm !important;
+    padding: 5mm !important;
+    padding-bottom: 0 !important;
+    margin: 0 !important;
+    font-family: 'Courier New', monospace !important;
+    font-size: 11px !important;
+    line-height: 1.4 !important;
+    box-sizing: border-box !important;
+  }
+  .pos-header {
+    page-break-inside: avoid !important;
+  }
+  .client-row {
+    page-break-inside: avoid !important;
+  }
+  .pos-footer {
+    page-break-inside: avoid !important;
+    margin-top: 15px !important;
+    padding-bottom: 0 !important;
+    margin-bottom: 0 !important;
+  }
+  .pos-footer::after {
+    content: "";
+    display: block;
+    page-break-after: always !important;
+  }
+}
+
+@page {
+  size: 80mm auto;
+  margin: 0;
+  margin-bottom: 0;
+}
