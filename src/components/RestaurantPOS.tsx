@@ -17,7 +17,7 @@ interface PaymentOptionProps {
 const PaymentOption: React.FC<PaymentOptionProps> = ({ value, label, selected, onSelect }) => {
   return (
     <button
-      className={`px-4 py-2 rounded-lg font-medium transition-all duration-200 border ${
+      className={`px-4 py-2 rounded-lg font-sans font-medium transition-all duration-200 border text-sm ${
         selected
           ? value === 'efectivo'
             ? 'border-emerald-500 bg-emerald-500 text-white shadow-sm'
@@ -223,17 +223,17 @@ const RestaurantPOS: React.FC = () => {
   return (
     <>
       {/* VISTA EN PANTALLA - SE OCULTA AL IMPRIMIR */}
-      <div className="screen-container min-h-screen bg-gradient-to-br from-slate-50 to-gray-100 py-8 px-4 print:hidden">
-        {/* Header Mejorado */}
+      <div className="screen-container min-h-screen bg-gradient-to-br from-slate-50 to-gray-100 py-8 px-4 print:hidden font-sans">
+        {/* Header Mejorado con Tipografía Amazon */}
         <div className="max-w-4xl mx-auto mb-8">
           <div className="text-center">
             <div className="inline-flex items-center justify-center gap-3 bg-white rounded-2xl px-8 py-6 shadow-sm border border-gray-200 mb-4">
-              <div className="w-14 h-14 bg-gradient-to-br from-slate-700 to-slate-800 rounded-xl flex items-center justify-center">
+              <div className="w-14 h-14 bg-gradient-to-br from-slate-800 to-slate-900 rounded-xl flex items-center justify-center">
                 <span className="text-white text-2xl">🍽️</span>
               </div>
               <div>
-                <h1 className="text-3xl font-bold text-gray-900 font-playfair">MARY'S RESTAURANT</h1>
-                <p className="text-gray-600 text-sm mt-1">Sistema de Punto de Venta</p>
+                <h1 className="text-3xl font-bold text-gray-900 tracking-tight">MARY'S RESTAURANT </h1>
+                <p className="text-gray-600 text-sm mt-1 font-normal">Sistema de registro de ventas</p>
               </div>
             </div>
           </div>
@@ -252,7 +252,7 @@ const RestaurantPOS: React.FC = () => {
                 <span className={`w-2 h-2 rounded-full ${
                   alertMessage.type === 'success' ? 'bg-emerald-500' : 'bg-rose-500'
                 }`}></span>
-                <span className="font-medium">{alertMessage.text}</span>
+                <span className="font-medium text-sm">{alertMessage.text}</span>
               </div>
             </div>
           )}
@@ -260,19 +260,19 @@ const RestaurantPOS: React.FC = () => {
           {/* Client Table Mejorada */}
           <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden mb-6">
             <div className="px-6 py-5 border-b border-gray-200 bg-gray-50">
-              <h2 className="text-xl font-semibold text-gray-900 text-center">Registro de Ventas</h2>
-              <p className="text-gray-600 text-sm text-center mt-1">Complete la información de los clientes</p>
+              <h2 className="text-xl font-semibold text-gray-900 text-center tracking-tight">Registro de Ventas</h2>
+              <p className="text-gray-600 text-sm text-center mt-1 font-normal">Complete la información de los clientes</p>
             </div>
             
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead>
                   <tr className="bg-slate-100 border-b border-gray-300">
-                    <th className="py-4 px-4 text-center text-xs font-semibold text-slate-700 uppercase tracking-wider w-12">#</th>
-                    <th className="py-4 px-4 text-center text-xs font-semibold text-slate-700 uppercase tracking-wider">Cliente</th>
-                    <th className="py-4 px-4 text-center text-xs font-semibold text-slate-700 uppercase tracking-wider w-32">Método de Pago</th>
-                    <th className="py-4 px-4 text-center text-xs font-semibold text-slate-700 uppercase tracking-wider w-28">Monto (S/)</th>
-                    <th className="py-4 px-4 text-center text-xs font-semibold text-slate-700 uppercase tracking-wider w-16">Acciones</th>
+                    <th className="py-4 px-4 text-center text-xs font-semibold text-slate-700 uppercase tracking-wide w-12">#</th>
+                    <th className="py-4 px-4 text-center text-xs font-semibold text-slate-700 uppercase tracking-wide">Cliente</th>
+                    <th className="py-4 px-4 text-center text-xs font-semibold text-slate-700 uppercase tracking-wide w-32">Método de Pago</th>
+                    <th className="py-4 px-4 text-center text-xs font-semibold text-slate-700 uppercase tracking-wide w-28">Monto (S/)</th>
+                    <th className="py-4 px-4 text-center text-xs font-semibold text-slate-700 uppercase tracking-wide w-16">Acciones</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-200">
@@ -282,7 +282,7 @@ const RestaurantPOS: React.FC = () => {
                       <td className="py-4 px-4">
                         <input 
                           type="text" 
-                          className="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-slate-500 focus:border-transparent transition-all text-center"
+                          className="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-slate-500 focus:border-transparent transition-all text-center font-normal"
                           placeholder="Nombre del cliente"
                           value={client.name}
                           onChange={(e) => handleNameChange(client.id, e.target.value)}
@@ -335,7 +335,7 @@ const RestaurantPOS: React.FC = () => {
           {/* Action Buttons Mejorados */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
             <button 
-              className="flex items-center justify-center gap-3 px-6 py-4 bg-white border border-gray-300 rounded-xl text-gray-700 font-medium hover:bg-gray-50 hover:border-gray-400 transition-all duration-200 shadow-sm"
+              className="flex items-center justify-center gap-3 px-6 py-4 bg-white border border-gray-300 rounded-xl text-gray-700 font-medium hover:bg-gray-50 hover:border-gray-400 transition-all duration-200 shadow-sm text-sm"
               onClick={addRow}
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -345,7 +345,7 @@ const RestaurantPOS: React.FC = () => {
             </button>
             
             <button 
-              className="flex items-center justify-center gap-3 px-6 py-4 bg-white border border-gray-300 rounded-xl text-gray-700 font-medium hover:bg-gray-50 hover:border-gray-400 transition-all duration-200 shadow-sm"
+              className="flex items-center justify-center gap-3 px-6 py-4 bg-white border border-gray-300 rounded-xl text-gray-700 font-medium hover:bg-gray-50 hover:border-gray-400 transition-all duration-200 shadow-sm text-sm"
               onClick={clearAll}
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -355,7 +355,7 @@ const RestaurantPOS: React.FC = () => {
             </button>
             
             <button 
-              className="flex items-center justify-center gap-3 px-6 py-4 bg-gradient-to-r from-slate-700 to-slate-800 rounded-xl text-white font-medium hover:from-slate-800 hover:to-slate-900 transition-all duration-200 shadow-lg shadow-slate-500/25"
+              className="flex items-center justify-center gap-3 px-6 py-4 bg-gradient-to-r from-slate-800 to-slate-900 rounded-xl text-white font-medium hover:from-slate-900 hover:to-slate-950 transition-all duration-200 shadow-lg shadow-slate-500/25 text-sm"
               onClick={handlePrint}
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -368,10 +368,10 @@ const RestaurantPOS: React.FC = () => {
           {/* Total Section Mejorado */}
           <div className="bg-gradient-to-r from-slate-100 to-slate-200 rounded-2xl p-8 border border-slate-300 mb-8">
             <div className="flex flex-col items-center text-center">
-              <h3 className="text-2xl font-semibold text-slate-800 mb-2">Total Vendido</h3>
-              <p className="text-slate-600 text-sm mb-4">Suma total de todas las ventas</p>
-              <div className="text-4xl font-bold text-slate-900">S/ {total.toFixed(2)}</div>
-              <div className="text-sm text-slate-600 mt-3 bg-white px-3 py-1 rounded-full border border-slate-300">
+              <h3 className="text-2xl font-semibold text-slate-800 mb-2 tracking-tight">Total Vendido</h3>
+              <p className="text-slate-600 text-sm mb-4 font-normal">Suma total de todas las ventas</p>
+              <div className="text-4xl font-bold text-slate-900 tracking-tight">S/ {total.toFixed(2)}</div>
+              <div className="text-sm text-slate-600 mt-3 bg-white px-3 py-1 rounded-full border border-slate-300 font-normal">
                 {clients.length} cliente(s) registrado(s)
               </div>
             </div>
@@ -380,29 +380,29 @@ const RestaurantPOS: React.FC = () => {
           {/* Instructions Mejorado */}
           <div className="bg-slate-100 rounded-2xl p-6 border border-slate-300">
             <div className="flex items-start gap-4">
-              <div className="w-8 h-8 bg-slate-700 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+              <div className="w-8 h-8 bg-slate-800 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
                 <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
                   <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
                 </svg>
               </div>
               <div className="flex-1">
-                <h4 className="font-semibold text-slate-900 text-lg mb-3">Instrucciones de Uso</h4>
+                <h4 className="font-semibold text-slate-900 text-lg mb-3 tracking-tight">Instrucciones de Uso</h4>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-slate-700 text-sm">
                   <div className="flex items-center gap-2">
-                    <div className="w-2 h-2 bg-slate-500 rounded-full"></div>
-                    <span>Complete el nombre del cliente y el monto</span>
+                    <div className="w-2 h-2 bg-slate-600 rounded-full"></div>
+                    <span className="font-normal">Complete el nombre del cliente y el monto</span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <div className="w-2 h-2 bg-slate-500 rounded-full"></div>
-                    <span>Seleccione el método de pago</span>
+                    <div className="w-2 h-2 bg-slate-600 rounded-full"></div>
+                    <span className="font-normal">Seleccione el método de pago</span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <div className="w-2 h-2 bg-slate-500 rounded-full"></div>
-                    <span>Agregue más clientes si es necesario</span>
+                    <div className="w-2 h-2 bg-slate-600 rounded-full"></div>
+                    <span className="font-normal">Agregue más clientes si es necesario</span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <div className="w-2 h-2 bg-slate-500 rounded-full"></div>
-                    <span>Presione "Imprimir Recibo" para el ticket</span>
+                    <div className="w-2 h-2 bg-slate-600 rounded-full"></div>
+                    <span className="font-normal">Presione "Imprimir Recibo" para el ticket</span>
                   </div>
                 </div>
               </div>
@@ -432,9 +432,9 @@ const RestaurantPOS: React.FC = () => {
         </div>
         
         <div className="pos-total text-right mt-3 pt-2 border-t-2 border-black text-xs font-bold">
-          <div className="pos-total-label text-[11px] mb-1">═══════════════════════</div>
+          <div className="pos-total-label text-[11px] mb-1">======════════════════</div>
           <div className="pos-total-amount text-base" id="posTotalAmount" ref={posTotalAmountRef}>TOTAL: S/ 0.00</div>
-          <div className="pos-total-label text-[11px] mt-1">═══════════════════════</div>
+          <div className="pos-total-label text-[11px] mt-1">======════════════════</div>
         </div>
         
         <div className="pos-footer text-center mt-5 pt-3 border-t-2 border-dashed border-black text-[10px] leading-relaxed">
@@ -579,5 +579,3 @@ const RestaurantPOS: React.FC = () => {
 };
 
 export default RestaurantPOS;
-
-
