@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 
 interface Client {
   id: number;
@@ -40,6 +40,9 @@ const RestaurantPOS: React.FC = () => {
   const [total, setTotal] = useState<number>(0);
   const [alertMessage, setAlertMessage] = useState<{ text: string, type: 'success' | 'error' } | null>(null);
   const [currentDateTime, setCurrentDateTime] = useState<{ date: string, time: string }>({ date: '', time: '' });
+
+  const posContentRef = useRef<HTMLDivElement>(null);
+  const posTotalAmountRef = useRef<HTMLDivElement>(null);
 
   const updateDateTime = useCallback(() => {
     const now = new Date();
@@ -151,9 +154,47 @@ const RestaurantPOS: React.FC = () => {
     }
   };
 
+  // FUNCIÓN CORREGIDA PARA IMPRIMIR
   const handlePrint = () => {
     updateDateTime();
     
+    // Preparar contenido para impresión
+    if (posContentRef.current && posTotalAmountRef.current) {
+      let printTotal = 0;
+      const printContent = clients.map((client, index) => {
+        const amountValue = client.amount.replace(/[^\d.]/g, '');
+        const amount = amountValue && parseFloat(amountValue) > 0 ? parseFloat(amountValue) : 0;
+        
+        if (amount > 0) {
+          printTotal += amount;
+        }
+        
+        return {
+          number: index + 1,
+          name: client.name.trim().toUpperCase() || '(SIN NOMBRE)',
+          payment: client.paymentMethod ? client.paymentMethod.toUpperCase() : '---',
+          paymentClass: client.paymentMethod,
+          amount: amount > 0 ? `S/ ${amount.toFixed(2)}` : 'S/ 0.00',
+          amountValue: amount
+        };
+      });
+
+      // Actualizar el contenido del ticket
+      posContentRef.current.innerHTML = printContent.map(client => `
+        <div class="client-row">
+          <div class="client-number">${client.number}</div>
+          <div class="client-name">${client.name}</div>
+          <div class="client-payment">
+            <span class="payment-option-print ${client.paymentClass}">${client.payment}</span>
+          </div>
+          <div class="client-amount">${client.amount}</div>
+        </div>
+      `).join('');
+
+      // Actualizar el total
+      posTotalAmountRef.current.textContent = `TOTAL: S/ ${printTotal.toFixed(2)}`;
+    }
+
     const hasValidData = clients.some(client => 
       client.name.trim() && client.amount && parseFloat(client.amount) > 0
     );
@@ -357,8 +398,8 @@ const RestaurantPOS: React.FC = () => {
         </div>
       </div>
 
-      {/* Vista para Impresión POS (se mantiene igual) */}
-      <div className="pos-container hidden print:block w-[80mm] bg-white p-[5mm] mx-auto font-mono text-[11px] leading-tight">
+      {/* VISTA PARA IMPRESIÓN POS - CORREGIDA */}
+      <div className="pos-container hidden print:block w-[80mm] bg-white p-[5mm] mx-auto font-mono text-[11px] leading-tight box-border">
         <div className="pos-header text-center border-b-2 border-black py-3 mb-2">
           <div className="pos-title text-lg font-bold mb-2 tracking-widest">MARY'S RESTAURANT</div>
           <div className="pos-subtitle text-[10px]">RUC: 20505262086</div>
@@ -373,41 +414,21 @@ const RestaurantPOS: React.FC = () => {
           <div className="client-amount w-1/4 text-right pr-1">MONTO</div>
         </div>
         
-        <div id="posContent">
-          {clients.map((client, index) => {
-            const amountValue = client.amount.replace(/[^\d.]/g, '');
-            const amount = amountValue && parseFloat(amountValue) > 0 
-              ? 'S/ ' + parseFloat(amountValue).toFixed(2) 
-              : 'S/ 0.00';
-              
-            return (
-              <div className="client-row flex border-b border-dotted border-gray-400 py-2 text-[10px] min-h-8 items-center" key={client.id}>
-                <div className="client-number w-1/10 text-center font-bold">{index + 1}</div>
-                <div className="client-name w-[45%] px-1 break-words leading-tight font-bold">
-                  {client.name.trim().toUpperCase() || '(SIN NOMBRE)'}
-                </div>
-                <div className="client-payment w-1/5 text-center leading-tight">
-                  <span className={`payment-option-print border-2 border-black px-2 py-1 text-[8px] font-bold inline-block min-w-[45px] ${client.paymentMethod}`}>
-                    {client.paymentMethod ? client.paymentMethod.toUpperCase() : '---'}
-                  </span>
-                </div>
-                <div className="client-amount w-1/4 text-right pr-1 font-bold leading-tight">{amount}</div>
-              </div>
-            );
-          })}
+        <div id="posContent" ref={posContentRef}>
+          {/* Aquí se inserta el contenido dinámicamente */}
         </div>
         
         <div className="pos-total text-right mt-3 pt-2 border-t-2 border-black text-xs font-bold">
           <div className="pos-total-label text-[11px] mb-1">======════════════════</div>
-          <div className="pos-total-amount text-base">TOTAL: S/ {total.toFixed(2)}</div>
+          <div className="pos-total-amount text-base" id="posTotalAmount" ref={posTotalAmountRef}>TOTAL: S/ 0.00</div>
           <div className="pos-total-label text-[11px] mt-1">======════════════════</div>
         </div>
         
         <div className="pos-footer text-center mt-5 pt-3 border-t-2 border-dashed border-black text-[10px] leading-relaxed">
           <div className="font-bold text-[11px]">*** REGISTRO DE VENTAS ***</div>
-          <div className="my-2">generado por @jozzymar</div>
+          <div style={{ margin: '8px 0' }}>generado por @jozzymar</div>
           <div>@restaurantmarys</div>
-          <div className="h-[15mm]"></div>
+          <div style={{ height: '15mm' }}></div>
         </div>
       </div>
     </div>
