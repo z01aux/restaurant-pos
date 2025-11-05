@@ -432,9 +432,9 @@ const RestaurantPOS: React.FC = () => {
         </div>
         
         <div className="pos-total text-right mt-3 pt-2 border-t-2 border-black text-xs font-bold">
-          <div className="pos-total-label text-[11px] mb-1">======════════════════</div>
+          <div className="pos-total-label text-[11px] mb-1">═══════════════════════</div>
           <div className="pos-total-amount text-base" id="posTotalAmount" ref={posTotalAmountRef}>TOTAL: S/ 0.00</div>
-          <div className="pos-total-label text-[11px] mt-1">======════════════════</div>
+          <div className="pos-total-label text-[11px] mt-1">═══════════════════════</div>
         </div>
         
         <div className="pos-footer text-center mt-5 pt-3 border-t-2 border-dashed border-black text-[10px] leading-relaxed">
@@ -579,3 +579,4 @@ const RestaurantPOS: React.FC = () => {
 };
 
 export default RestaurantPOS;
+
