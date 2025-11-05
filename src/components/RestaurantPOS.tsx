@@ -232,8 +232,8 @@ const RestaurantPOS: React.FC = () => {
                 <span className="text-white text-2xl">🍽️</span>
               </div>
               <div>
-                <h1 className="text-3xl font-bold text-gray-900 font-playfair">MARY'S RESTAURANT</h1>
-                <p className="text-gray-600 text-sm mt-1">Registro de ventas</p>
+                <h1 className="text-3xl font-bold text-gray-900 font-playfair">RESTAURANT MARY'S</h1>
+                <p className="text-gray-600 text-sm mt-1">Sistema de Punto de Venta</p>
               </div>
             </div>
           </div>
@@ -268,11 +268,11 @@ const RestaurantPOS: React.FC = () => {
               <table className="w-full">
                 <thead>
                   <tr className="bg-slate-100 border-b border-gray-300">
-                    <th className="py-4 px-4 text-center text-xs font-semibold text-slate-700 uppercase tracking-wider">#</th>
+                    <th className="py-4 px-4 text-center text-xs font-semibold text-slate-700 uppercase tracking-wider w-12">#</th>
                     <th className="py-4 px-4 text-center text-xs font-semibold text-slate-700 uppercase tracking-wider">Cliente</th>
-                    <th className="py-4 px-4 text-center text-xs font-semibold text-slate-700 uppercase tracking-wider">Método de Pago</th>
-                    <th className="py-4 px-4 text-center text-xs font-semibold text-slate-700 uppercase tracking-wider">Monto (S/)</th>
-                    <th className="py-4 px-4 text-center text-xs font-semibold text-slate-700 uppercase tracking-wider">Acciones</th>
+                    <th className="py-4 px-4 text-center text-xs font-semibold text-slate-700 uppercase tracking-wider w-32">Método de Pago</th>
+                    <th className="py-4 px-4 text-center text-xs font-semibold text-slate-700 uppercase tracking-wider w-28">Monto (S/)</th>
+                    <th className="py-4 px-4 text-center text-xs font-semibold text-slate-700 uppercase tracking-wider w-16">Acciones</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-200">
@@ -304,7 +304,7 @@ const RestaurantPOS: React.FC = () => {
                           />
                         </div>
                       </td>
-                      <td className="py-4 px-4">
+                      <td className="py-4 px-4 text-center w-28">
                         <input 
                           type="text" 
                           className="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm text-center font-medium focus:outline-none focus:ring-2 focus:ring-slate-500 focus:border-transparent transition-all"
@@ -414,17 +414,17 @@ const RestaurantPOS: React.FC = () => {
       {/* VISTA PARA IMPRESIÓN POS - SOLO SE MUESTRA AL IMPRIMIR */}
       <div className="pos-container hidden print:block w-[80mm] bg-white p-[5mm] mx-auto font-mono text-[11px] leading-tight box-border">
         <div className="pos-header text-center border-b-2 border-black py-3 mb-2">
-          <div className="pos-title text-lg font-bold mb-2 tracking-widest">MARY'S RESTAURANT</div>
-          <div className="pos-subtitle text-[11px]">RUC: 20505262086</div>
-          <div className="pos-subtitle text-[11px]">Fecha: {currentDateTime.date}</div>
-          <div className="pos-subtitle text-[11px]">Hora: {currentDateTime.time}</div>
+          <div className="pos-title text-lg font-bold mb-2 tracking-widest">RESTAURANT MARY'S</div>
+          <div className="pos-subtitle text-[10px]">RUC: 20505262086</div>
+          <div className="pos-subtitle text-[10px]">Fecha: {currentDateTime.date}</div>
+          <div className="pos-subtitle text-[10px]">Hora: {currentDateTime.time}</div>
         </div>
         
         <div className="client-row header-row flex border-b-2 border-black py-2 font-bold">
-          <div className="client-number w-1/10 text-center">N°</div>
-          <div className="client-name w-[45%] px-1 text-center">CLIENTE</div>
-          <div className="client-payment w-1/5 text-center">PAGO</div>
-          <div className="client-amount w-1/4 text-right pr-1">MONTO</div>
+          <div className="client-number w-[12%] text-center">N°</div>
+          <div className="client-name w-[48%] px-1 text-center">CLIENTE</div>
+          <div className="client-payment w-[20%] text-center">PAGO</div>
+          <div className="client-amount w-[20%] text-right pr-1">MONTO</div>
         </div>
         
         <div id="posContent" ref={posContentRef}>
@@ -432,16 +432,28 @@ const RestaurantPOS: React.FC = () => {
         </div>
         
         <div className="pos-total text-right mt-3 pt-2 border-t-2 border-black text-xs font-bold">
-          <div className="pos-total-label text-[11px] mb-1">══════════════════════</div>
+          <div className="pos-total-label text-[11px] mb-1">======════════════════</div>
           <div className="pos-total-amount text-base" id="posTotalAmount" ref={posTotalAmountRef}>TOTAL: S/ 0.00</div>
-          <div className="pos-total-label text-[11px] mt-1">══════════════════════</div>
+          <div className="pos-total-label text-[11px] mt-1">======════════════════</div>
         </div>
         
         <div className="pos-footer text-center mt-5 pt-3 border-t-2 border-dashed border-black text-[10px] leading-relaxed">
           <div className="font-bold text-[11px]">*** REGISTRO DE VENTAS ***</div>
-          <div style={{ margin: '12px 0' }}>generado por @jozzymar</div>
+          <div style={{ margin: '8px 0' }}>generado por @jozzymar</div>
           <div>@restaurantmarys</div>
-          <div style={{ height: '15mm' }}></div>
+          
+          {/* ESPACIO EXTRA PARA CORTE MANUAL */}
+          <div style={{ 
+            height: '25mm', 
+            borderTop: '2px dashed #000',
+            marginTop: '10px',
+            textAlign: 'center',
+            fontSize: '8px',
+            color: '#666',
+            paddingTop: '5px'
+          }}>
+            --- CORTAR AQUÍ ---
+          </div>
         </div>
       </div>
 
@@ -513,29 +525,33 @@ const RestaurantPOS: React.FC = () => {
           align-items: center;
         }
         .client-number {
-          width: 10%;
+          width: 12%;
           text-align: center;
           font-weight: bold;
+          font-size: 10px;
         }
         .client-name {
-          width: 45%;
+          width: 48%;
           padding: 0 5px;
           word-break: break-word;
           line-height: 1.4;
           font-weight: bold;
-          font-size: 13px;
+          font-size: 11px !important;
         }
         .client-payment {
           width: 20%;
           text-align: center;
           line-height: 1.4;
+          font-size: 10px;
         }
         .client-amount {
-          width: 25%;
+          width: 20%;
           text-align: right;
           padding-right: 5px;
           font-weight: bold;
           line-height: 1.4;
+          font-size: 10px;
+          word-break: keep-all;
         }
         .payment-option-print {
           border: 1.5px solid #000;
@@ -563,9 +579,3 @@ const RestaurantPOS: React.FC = () => {
 };
 
 export default RestaurantPOS;
-
-
-
-
-
-
