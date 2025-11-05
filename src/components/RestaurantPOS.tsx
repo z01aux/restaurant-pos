@@ -523,7 +523,7 @@ const RestaurantPOS: React.FC = () => {
           word-break: break-word;
           line-height: 1.4;
           font-weight: bold;
-          font-size: 11px !important;
+          font-size: 13px;
         }
         .client-payment {
           width: 20%;
@@ -563,6 +563,7 @@ const RestaurantPOS: React.FC = () => {
 };
 
 export default RestaurantPOS;
+
 
 
 
