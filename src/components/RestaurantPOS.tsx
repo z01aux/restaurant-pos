@@ -233,7 +233,7 @@ const RestaurantPOS: React.FC = () => {
               </div>
               <div>
                 <h1 className="text-3xl font-bold text-gray-900 font-playfair">MARY'S RESTAURANT</h1>
-                <p className="text-gray-600 text-sm mt-1">Sistema de Punto de Venta</p>
+                <p className="text-gray-600 text-sm mt-1">Registro de ventas</p>
               </div>
             </div>
           </div>
@@ -563,6 +563,7 @@ const RestaurantPOS: React.FC = () => {
 };
 
 export default RestaurantPOS;
+
 
 
 
