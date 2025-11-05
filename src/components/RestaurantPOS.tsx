@@ -414,7 +414,7 @@ const RestaurantPOS: React.FC = () => {
       {/* VISTA PARA IMPRESIÓN POS - SOLO SE MUESTRA AL IMPRIMIR */}
       <div className="pos-container hidden print:block w-[80mm] bg-white p-[5mm] mx-auto font-mono text-[11px] leading-tight box-border">
         <div className="pos-header text-center border-b-2 border-black py-3 mb-2">
-          <div className="pos-title text-lg font-bold mb-2 tracking-widest">RESTAURANT MARY'S</div>
+          <div className="pos-title text-lg font-bold mb-2 tracking-widest">MARY'S RESTAURANT </div>
           <div className="pos-subtitle text-[10px]">RUC: 20505262086</div>
           <div className="pos-subtitle text-[10px]">Fecha: {currentDateTime.date}</div>
           <div className="pos-subtitle text-[10px]">Hora: {currentDateTime.time}</div>
@@ -432,9 +432,9 @@ const RestaurantPOS: React.FC = () => {
         </div>
         
         <div className="pos-total text-right mt-3 pt-2 border-t-2 border-black text-xs font-bold">
-          <div className="pos-total-label text-[11px] mb-1">======════════════════</div>
+          <div className="pos-total-label text-[11px] mb-1">═══════════════════════</div>
           <div className="pos-total-amount text-base" id="posTotalAmount" ref={posTotalAmountRef}>TOTAL: S/ 0.00</div>
-          <div className="pos-total-label text-[11px] mt-1">======════════════════</div>
+          <div className="pos-total-label text-[11px] mt-1">═══════════════════════</div>
         </div>
         
         <div className="pos-footer text-center mt-5 pt-3 border-t-2 border-dashed border-black text-[10px] leading-relaxed">
@@ -536,7 +536,7 @@ const RestaurantPOS: React.FC = () => {
           word-break: break-word;
           line-height: 1.4;
           font-weight: bold;
-          font-size: 11px !important;
+          font-size: 12px;
         }
         .client-payment {
           width: 20%;
@@ -579,3 +579,4 @@ const RestaurantPOS: React.FC = () => {
 };
 
 export default RestaurantPOS;
+
