@@ -1,653 +1,783 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React from 'react';
+import { Order } from '../../types';
+import { pdf, Document, Page, Text, View, StyleSheet } from '@react-pdf/renderer';
 
-interface Client {
-  id: number;
-  name: string;
-  paymentMethod: 'efectivo' | 'yape' | '';
-  amount: string;
+interface OrderTicketProps {
+  order: Order;
 }
 
-interface PaymentOptionProps {
-  value: 'efectivo' | 'yape';
-  label: string;
-  selected: boolean;
-  onSelect: () => void;
-  compact?: boolean;
-}
-
-const PaymentOption: React.FC<PaymentOptionProps> = ({ value, label, selected, onSelect, compact = false }) => {
-  return (
-    <button
-      className={`${compact ? 'px-3 py-1.5 text-xs' : 'px-4 py-2 text-sm'} rounded-lg font-medium transition-all duration-200 border ${
-        selected
-          ? value === 'efectivo'
-            ? 'border-emerald-500 bg-emerald-500 text-white shadow-sm'
-            : 'border-violet-500 bg-violet-500 text-white shadow-sm'
-          : 'border-gray-300 bg-white text-gray-700 hover:border-gray-400 hover:bg-gray-50'
-      }`}
-      onClick={onSelect}
-    >
-      {label}
-    </button>
-  );
-};
-
-const RestaurantPOS: React.FC = () => {
-  const [clients, setClients] = useState<Client[]>([
-    { id: 1, name: '', paymentMethod: '', amount: '' },
-    { id: 2, name: '', paymentMethod: '', amount: '' }
-  ]);
+const OrderTicket: React.FC<OrderTicketProps> = ({ order }) => {
+  // Verificar si es un pedido por teléfono para ticket de cocina
+  const isPhoneOrder = order.source.type === 'phone';
   
-  const [total, setTotal] = useState<number>(0);
-  const [alertMessage, setAlertMessage] = useState<{ text: string, type: 'success' | 'error' } | null>(null);
-  const [currentDateTime, setCurrentDateTime] = useState<{ date: string, time: string }>({ date: '', time: '' });
-
-  const posContentRef = useRef<HTMLDivElement>(null);
-  const posTotalAmountRef = useRef<HTMLDivElement>(null);
-
-  const updateDateTime = useCallback(() => {
-    const now = new Date();
-    const dateOptions: Intl.DateTimeFormatOptions = { year: 'numeric', month: '2-digit', day: '2-digit' };
-    const timeOptions: Intl.DateTimeFormatOptions = { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false };
-    
-    setCurrentDateTime({
-      date: now.toLocaleDateString('es-PE', dateOptions),
-      time: now.toLocaleTimeString('es-PE', timeOptions)
-    });
-  }, []);
-
-  const showAlert = useCallback((message: string, type: 'success' | 'error') => {
-    setAlertMessage({ text: message, type });
-    setTimeout(() => setAlertMessage(null), 3000);
-  }, []);
-
-  const calculateTotal = useCallback(() => {
-    const newTotal = clients.reduce((sum, client) => {
-      const amountValue = client.amount.replace(/[^\d.]/g, '');
-      return amountValue && parseFloat(amountValue) > 0 ? sum + parseFloat(amountValue) : sum;
-    }, 0);
-    
-    setTotal(newTotal);
-  }, [clients]);
-
-  useEffect(() => {
-    calculateTotal();
-  }, [calculateTotal]);
-
-  useEffect(() => {
-    updateDateTime();
-  }, [updateDateTime]);
-
-  const handleNameChange = (id: number, value: string) => {
-    setClients(prev => 
-      prev.map(client => 
-        client.id === id ? { ...client, name: value } : client
-      )
-    );
-  };
-
-  const handlePaymentChange = (id: number, method: 'efectivo' | 'yape') => {
-    setClients(prev => 
-      prev.map(client => 
-        client.id === id ? { ...client, paymentMethod: method } : client
-      )
-    );
-  };
-
-  const handleAmountChange = (id: number, value: string) => {
-    let formattedValue = value.replace(/[^\d.]/g, '');
-    const parts = formattedValue.split('.');
-    
-    if (parts.length > 2) {
-      formattedValue = parts[0] + '.' + parts.slice(1).join('');
+  // Obtener el nombre del usuario actual desde localStorage
+  const getCurrentUserName = () => {
+    try {
+      const savedUser = localStorage.getItem('restaurant-user');
+      if (savedUser) {
+        const userData = JSON.parse(savedUser);
+        return userData.name || 'Sistema';
+      }
+    } catch (error) {
+      console.error('Error obteniendo usuario:', error);
     }
-    
-    if (parts[1] && parts[1].length > 2) {
-      formattedValue = parts[0] + '.' + parts[1].substring(0, 2);
+    return 'Sistema';
+  };
+
+  // Función para obtener número de orden para display
+  const getDisplayOrderNumber = () => {
+    return order.orderNumber || `ORD-${order.id.slice(-8).toUpperCase()}`;
+  };
+
+  // Función para obtener número de cocina para display
+  const getDisplayKitchenNumber = () => {
+    return order.kitchenNumber || `COM-${order.id.slice(-8).toUpperCase()}`;
+  };
+
+  // Función para obtener texto del método de pago
+  const getPaymentText = () => {
+    if (order.paymentMethod) {
+      const paymentMap = {
+        'EFECTIVO': 'EFECTIVO',
+        'YAPE/PLIN': 'YAPE/PLIN', 
+        'TARJETA': 'TARJETA'
+      };
+      return paymentMap[order.paymentMethod];
     }
-    
-    setClients(prev => 
-      prev.map(client => 
-        client.id === id ? { ...client, amount: formattedValue } : client
-      )
-    );
+    return 'NO APLICA';
   };
 
-  const handleAmountBlur = (id: number, value: string) => {
-    let formattedValue = value.replace(/[^\d.]/g, '');
-    
-    if (formattedValue && parseFloat(formattedValue) > 0) {
-      formattedValue = parseFloat(formattedValue).toFixed(2);
-    } else {
-      formattedValue = '';
+  // CONSTANTES PARA EL ANCHO DE IMPRESIÓN
+  const TICKET_WIDTH = 72; // 72mm para tu impresora
+  const PAGE_WIDTH = TICKET_WIDTH * 2.83465; // Convertir mm a puntos (1mm = 2.83465 puntos)
+  const FONT_SIZE_SMALL = 7;
+  const FONT_SIZE_NORMAL = 8;
+  const FONT_SIZE_LARGE = 9;
+  const FONT_SIZE_XLARGE = 10;
+  const PADDING = 8;
+
+  // Estilos para el PDF de COCINA (sin precios) - MODIFICADO para 72mm
+  const kitchenStyles = StyleSheet.create({
+    page: {
+      flexDirection: 'column',
+      backgroundColor: '#FFFFFF',
+      padding: PADDING,
+      fontSize: FONT_SIZE_NORMAL,
+      fontFamily: 'Helvetica-Bold',
+      width: PAGE_WIDTH,
+    },
+    header: {
+      textAlign: 'center',
+      marginBottom: 6,
+      borderBottom: '1pt solid #000000',
+      paddingBottom: 4,
+    },
+    restaurantName: {
+      fontSize: FONT_SIZE_XLARGE,
+      fontWeight: 'bold',
+      marginBottom: 2,
+      textTransform: 'uppercase',
+    },
+    area: {
+      fontSize: FONT_SIZE_LARGE,
+      fontWeight: 'bold',
+      marginBottom: 3,
+      textTransform: 'uppercase',
+    },
+    divider: {
+      borderBottom: '1pt solid #000000',
+      marginVertical: 3,
+    },
+    row: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      marginBottom: 2,
+    },
+    infoSection: {
+      marginBottom: 6,
+    },
+    label: {
+      fontWeight: 'bold',
+      marginBottom: 1,
+      fontSize: FONT_SIZE_SMALL,
+    },
+    value: {
+      fontWeight: 'normal',
+      fontSize: FONT_SIZE_SMALL,
+      maxWidth: '60%',
+      flexWrap: 'wrap',
+    },
+    productsHeader: {
+      textAlign: 'center',
+      fontWeight: 'bold',
+      marginBottom: 3,
+      textTransform: 'uppercase',
+      borderBottom: '1pt solid #000000',
+      paddingBottom: 2,
+      fontSize: FONT_SIZE_NORMAL,
+    },
+    productRow: {
+      flexDirection: 'row',
+      marginBottom: 3,
+    },
+    quantity: {
+      width: '20%',
+      fontWeight: 'bold',
+      fontSize: FONT_SIZE_SMALL,
+    },
+    productName: {
+      width: '80%',
+      fontWeight: 'bold',
+      textTransform: 'uppercase',
+      fontSize: FONT_SIZE_SMALL,
+      flexWrap: 'wrap',
+    },
+    notes: {
+      fontStyle: 'italic',
+      fontSize: FONT_SIZE_SMALL - 1,
+      marginLeft: 12,
+      marginBottom: 1,
+      flexWrap: 'wrap',
+    },
+    productsContainer: {
+      marginBottom: 8,
+    },
+    footer: {
+      marginTop: 6,
+      textAlign: 'center',
+    },
+    asteriskLine: {
+      textAlign: 'center',
+      fontSize: FONT_SIZE_SMALL,
+      letterSpacing: 1,
+      marginBottom: 1,
     }
-    
-    setClients(prev => 
-      prev.map(client => 
-        client.id === id ? { ...client, amount: formattedValue } : client
-      )
-    );
-  };
+  });
 
-  const addRow = () => {
-    const newId = clients.length > 0 ? Math.max(...clients.map(c => c.id)) + 1 : 1;
-    setClients(prev => [
-      ...prev,
-      { id: newId, name: '', paymentMethod: '', amount: '' }
-    ]);
-    showAlert('Nueva fila agregada correctamente', 'success');
-  };
-
-  const deleteRow = (id: number) => {
-    if (clients.length <= 1) {
-      showAlert('Debe haber al menos una fila en la tabla', 'error');
-      return;
+  // Estilos normales para otros tipos de pedido - MODIFICADO para 72mm
+  const normalStyles = StyleSheet.create({
+    page: {
+      flexDirection: 'column',
+      backgroundColor: '#FFFFFF',
+      padding: PADDING,
+      fontSize: FONT_SIZE_NORMAL,
+      fontFamily: 'Helvetica',
+      width: PAGE_WIDTH,
+    },
+    header: {
+      textAlign: 'center',
+      marginBottom: 6,
+    },
+    title: {
+      fontSize: FONT_SIZE_XLARGE,
+      fontWeight: 'bold',
+      marginBottom: 3,
+    },
+    subtitle: {
+      fontSize: FONT_SIZE_SMALL,
+      marginBottom: 1,
+    },
+    divider: {
+      borderBottom: '1pt solid #000000',
+      marginVertical: 3,
+    },
+    row: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      marginBottom: 2,
+    },
+    bold: {
+      fontWeight: 'bold',
+    },
+    section: {
+      marginBottom: 6,
+    },
+    table: {
+      marginBottom: 6,
+    },
+    tableHeader: {
+      flexDirection: 'row',
+      borderBottom: '1pt solid #000000',
+      paddingBottom: 2,
+      marginBottom: 2,
+    },
+    tableRow: {
+      flexDirection: 'row',
+      marginBottom: 3,
+    },
+    colQuantity: {
+      width: '20%',
+      fontSize: FONT_SIZE_SMALL,
+    },
+    colDescription: {
+      width: '45%',
+      fontSize: FONT_SIZE_SMALL,
+    },
+    colPrice: {
+      width: '35%',
+      textAlign: 'right',
+      fontSize: FONT_SIZE_SMALL,
+    },
+    quantity: {
+      fontWeight: 'bold',
+    },
+    productName: {
+      fontWeight: 'bold',
+      textTransform: 'uppercase',
+      fontSize: FONT_SIZE_SMALL,
+      flexWrap: 'wrap',
+    },
+    notes: {
+      fontStyle: 'italic',
+      fontSize: FONT_SIZE_SMALL - 1,
+      marginLeft: 8,
+      flexWrap: 'wrap',
+    },
+    calculations: {
+      marginTop: 3,
+    },
+    calculationRow: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      marginBottom: 1,
+      fontSize: FONT_SIZE_SMALL,
+    },
+    total: {
+      borderTop: '1pt solid #000000',
+      paddingTop: 3,
+      marginTop: 3,
+    },
+    footer: {
+      textAlign: 'center',
+      marginTop: 8,
+    },
+    footerDate: {
+      marginTop: 6,
+      fontSize: FONT_SIZE_SMALL - 1,
     }
-    
-    setClients(prev => prev.filter(client => client.id !== id));
-    showAlert('Fila eliminada correctamente', 'success');
-  };
+  });
 
-  const clearAll = () => {
-    if (window.confirm('¿Está seguro de que desea limpiar todos los datos? Esta acción no se puede deshacer.')) {
-      setClients([{ id: 1, name: '', paymentMethod: '', amount: '' }]);
-      showAlert('Todos los datos han sido limpiados', 'success');
-    }
-  };
+  // Componente del documento PDF para COCINA
+  const KitchenTicketDocument = () => (
+    <Document>
+      <Page size={[PAGE_WIDTH]} style={kitchenStyles.page}>
+        {/* Header - Nombre del cliente en lugar del restaurante */}
+        <View style={kitchenStyles.header}>
+          <Text style={kitchenStyles.restaurantName}>{order.customerName.toUpperCase()}</Text>
+          <Text style={kitchenStyles.area}>** COCINA **</Text>
+        </View>
 
-  const handlePrint = () => {
-    updateDateTime();
-    
-    if (posContentRef.current && posTotalAmountRef.current) {
-      let printTotal = 0;
-      const printContent = clients.map((client, index) => {
-        const amountValue = client.amount.replace(/[^\d.]/g, '');
-        const amount = amountValue && parseFloat(amountValue) > 0 ? parseFloat(amountValue) : 0;
+        {/* Información de la comanda */}
+        <View style={kitchenStyles.infoSection}>
+          <View style={kitchenStyles.row}>
+            <Text style={kitchenStyles.label}>CLIENTE:</Text>
+            <Text style={kitchenStyles.value}>{order.customerName.toUpperCase()}</Text>
+          </View>
+          <View style={kitchenStyles.row}>
+            <Text style={kitchenStyles.label}>AREA:</Text>
+            <Text style={kitchenStyles.value}>COCINA</Text>
+          </View>
+          <View style={kitchenStyles.row}>
+            <Text style={kitchenStyles.label}>COMANDA:</Text>
+            <Text style={kitchenStyles.value}>#{getDisplayKitchenNumber()}</Text>
+          </View>
+          <View style={kitchenStyles.row}>
+            <Text style={kitchenStyles.label}>FECHA:</Text>
+            <Text style={kitchenStyles.value}>
+              {order.createdAt.toLocaleDateString('es-ES')} - {order.createdAt.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })}
+            </Text>
+          </View>
+          <View style={kitchenStyles.row}>
+            <Text style={kitchenStyles.label}>ATENDIDO POR:</Text>
+            <Text style={kitchenStyles.value}>{getCurrentUserName().toUpperCase()}</Text>
+          </View>
+        </View>
+
+        <View style={kitchenStyles.divider} />
+
+        {/* Header de productos - "DESCRIPCION" en lugar de "PRODUCTOS" */}
+        <Text style={kitchenStyles.productsHeader}>DESCRIPCION</Text>
         
-        if (amount > 0) {
-          printTotal += amount;
-        }
-        
-        return {
-          number: index + 1,
-          name: client.name.trim().toUpperCase() || '(SIN NOMBRE)',
-          payment: client.paymentMethod ? client.paymentMethod.toUpperCase() : '---',
-          paymentClass: client.paymentMethod,
-          amount: amount > 0 ? `S/ ${amount.toFixed(2)}` : 'S/ 0.00',
-          amountValue: amount
-        };
-      });
+        <View style={kitchenStyles.divider} />
 
-      posContentRef.current.innerHTML = printContent.map(client => `
-        <div class="client-row">
-          <div class="client-number">${client.number}</div>
-          <div class="client-name">${client.name}</div>
-          <div class="client-payment">
-            <span class="payment-option-print ${client.paymentClass}">${client.payment}</span>
-          </div>
-          <div class="client-amount">${client.amount}</div>
+        {/* Lista de productos */}
+        <View style={kitchenStyles.productsContainer}>
+          {order.items.map((item, index) => (
+            <View key={index}>
+              <View style={kitchenStyles.productRow}>
+                <Text style={kitchenStyles.quantity}>{item.quantity}x</Text>
+                <Text style={kitchenStyles.productName}>{item.menuItem.name.toUpperCase()}</Text>
+              </View>
+              {item.notes && (
+                <Text style={kitchenStyles.notes}>- {item.notes}</Text>
+              )}
+            </View>
+          ))}
+        </View>
+
+        <View style={kitchenStyles.divider} />
+
+        {/* Footer - Solo una línea de asteriscos */}
+        <View style={kitchenStyles.footer}>
+          <Text style={kitchenStyles.asteriskLine}>********************************</Text>
+        </View>
+      </Page>
+    </Document>
+  );
+
+  // Componente del documento PDF normal (ACTUALIZADO para mostrar método de pago)
+  const NormalTicketDocument = () => (
+    <Document>
+      <Page size={[PAGE_WIDTH]} style={normalStyles.page}>
+        <View style={normalStyles.header}>
+          <Text style={normalStyles.title}>MARY'S RESTAURANT</Text>
+          <Text style={normalStyles.subtitle}>Av. Isabel La Católica 1254</Text>
+          <Text style={normalStyles.subtitle}>Tel: 941 778 599</Text>
+          <View style={normalStyles.divider} />
+        </View>
+
+        {/* Información de la orden */}
+        <View style={normalStyles.section}>
+          <View style={normalStyles.row}>
+            <Text style={normalStyles.bold}>ORDEN:</Text>
+            <Text>{getDisplayOrderNumber()}</Text>
+          </View>
+          <View style={normalStyles.row}>
+            <Text style={normalStyles.bold}>TIPO:</Text>
+            <Text>{getSourceText(order.source.type)}</Text>
+          </View>
+          <View style={normalStyles.row}>
+            <Text style={normalStyles.bold}>FECHA:</Text>
+            <Text>{order.createdAt.toLocaleDateString()}</Text>
+          </View>
+          <View style={normalStyles.row}>
+            <Text style={normalStyles.bold}>HORA:</Text>
+            <Text>{order.createdAt.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })}</Text>
+          </View>
+          {/* Nuevo: Método de Pago */}
+          <View style={normalStyles.row}>
+            <Text style={normalStyles.bold}>PAGO:</Text>
+            <Text>{getPaymentText()}</Text>
+          </View>
+        </View>
+
+        <View style={normalStyles.divider} />
+
+        {/* Información del cliente ACTUALIZADA con mesa */}
+        <View style={normalStyles.section}>
+          <View style={[normalStyles.row, normalStyles.bold]}>
+            <Text>CLIENTE:</Text>
+            <Text style={{ maxWidth: '60%', flexWrap: 'wrap' }}>{order.customerName.toUpperCase()}</Text>
+          </View>
+          <View style={normalStyles.row}>
+            <Text>TELÉFONO:</Text>
+            <Text>{order.phone}</Text>
+          </View>
+          {order.tableNumber && (
+            <View style={normalStyles.row}>
+              <Text>MESA:</Text>
+              <Text>{order.tableNumber}</Text>
+            </View>
+          )}
+        </View>
+
+        <View style={normalStyles.divider} />
+
+        {/* Tabla de productos */}
+        <View style={normalStyles.table}>
+          <View style={normalStyles.tableHeader}>
+            <Text style={normalStyles.colQuantity}>Cant</Text>
+            <Text style={normalStyles.colDescription}>Descripción</Text>
+            <Text style={normalStyles.colPrice}>Precio</Text>
+          </View>
+
+          {order.items.map((item, index) => (
+            <View key={index} style={normalStyles.tableRow}>
+              <Text style={[normalStyles.colQuantity, normalStyles.quantity]}>{item.quantity}x</Text>
+              <View style={normalStyles.colDescription}>
+                <Text style={normalStyles.productName}>{item.menuItem.name}</Text>
+                {item.notes && (
+                  <Text style={normalStyles.notes}>Nota: {item.notes}</Text>
+                )}
+              </View>
+              <Text style={normalStyles.colPrice}>
+                S/ {(item.menuItem.price * item.quantity).toFixed(2)}
+              </Text>
+            </View>
+          ))}
+        </View>
+
+        {/* Cálculos con IGV */}
+        <View style={normalStyles.calculations}>
+          <View style={normalStyles.calculationRow}>
+            <Text>Subtotal:</Text>
+            <Text>S/ {(order.total / 1.18).toFixed(2)}</Text>
+          </View>
+          <View style={normalStyles.calculationRow}>
+            <Text>IGV (18%):</Text>
+            <Text>S/ {(order.total - (order.total / 1.18)).toFixed(2)}</Text>
+          </View>
+          <View style={[normalStyles.row, normalStyles.total, normalStyles.bold]}>
+            <Text>TOTAL:</Text>
+            <Text>S/ {order.total.toFixed(2)}</Text>
+          </View>
+        </View>
+
+        <View style={normalStyles.divider} />
+
+        <View style={normalStyles.footer}>
+          <Text style={normalStyles.bold}>¡GRACIAS POR SU PEDIDO!</Text>
+          <Text>*** {getSourceText(order.source.type)} ***</Text>
+          <Text style={normalStyles.footerDate}>
+            {new Date().toLocaleString('es-ES', { 
+              year: 'numeric',
+              month: '2-digit',
+              day: '2-digit',
+              hour: '2-digit',
+              minute: '2-digit'
+            })}
+          </Text>
+        </View>
+      </Page>
+    </Document>
+  );
+
+  // Función para descargar PDF
+  const handleDownloadPDF = async () => {
+    try {
+      const blob = await pdf(
+        isPhoneOrder ? <KitchenTicketDocument /> : <NormalTicketDocument />
+      ).toBlob();
+      
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      
+      const fileName = generateFileName(order, isPhoneOrder);
+      
+      link.href = url;
+      link.download = fileName;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error('Error generando PDF:', error);
+    }
+  };
+
+  // Función para imprimir - MODIFICADA para usar la misma página
+  const handlePrint = async () => {
+    // Crear un contenedor temporal para el ticket
+    const printContainer = document.createElement('div');
+    printContainer.id = 'print-ticket-container';
+    printContainer.style.cssText = `
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: white;
+      z-index: 9999;
+      padding: 20px;
+      overflow: auto;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+    `;
+
+    // Generar el contenido del ticket
+    const ticketContent = generateTicketContent(order, isPhoneOrder);
+    
+    // Crear el contenido del ticket con estilos de impresión
+    const ticketHTML = `
+      <div style="width: 72mm; margin: 0 auto; background: white;">
+        ${ticketContent}
+        <div style="text-align: center; margin-top: 20px;">
+          <button onclick="window.print()" style="padding: 10px 20px; background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; margin: 5px;">
+            🖨️ Imprimir
+          </button>
+          <button onclick="document.getElementById('print-ticket-container').remove()" style="padding: 10px 20px; background: #dc3545; color: white; border: none; border-radius: 4px; cursor: pointer; margin: 5px;">
+            ❌ Cerrar
+          </button>
         </div>
-      `).join('');
+      </div>
+    `;
 
-      posTotalAmountRef.current.textContent = `TOTAL: S/ ${printTotal.toFixed(2)}`;
-    }
+    printContainer.innerHTML = ticketHTML;
+    document.body.appendChild(printContainer);
 
-    const hasValidData = clients.some(client => 
-      client.name.trim() && client.amount && parseFloat(client.amount) > 0
-    );
-    
-    if (!hasValidData && !window.confirm('No hay datos completos para imprimir. ¿Desea continuar con la impresión?')) {
-      return;
-    }
-    
-    setTimeout(() => {
-      window.print();
-    }, 300);
+    // Agregar estilos de impresión globales
+    const printStyles = document.createElement('style');
+    printStyles.innerHTML = `
+      @media print {
+        @page {
+          size: 72mm auto;
+          margin: 0;
+          padding: 0;
+        }
+        body * {
+          visibility: hidden;
+        }
+        #print-ticket-container,
+        #print-ticket-container * {
+          visibility: visible;
+        }
+        #print-ticket-container {
+          position: absolute;
+          top: 0;
+          left: 0;
+          width: 100%;
+          height: 100%;
+          background: white;
+          padding: 0;
+          margin: 0;
+        }
+        #print-ticket-container button {
+          display: none !important;
+        }
+        .ticket {
+          width: 72mm !important;
+          margin: 0 auto !important;
+          padding: 8px !important;
+        }
+      }
+    `;
+    document.head.appendChild(printStyles);
   };
 
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.ctrlKey && e.key === 'p') {
-        e.preventDefault();
-        handlePrint();
-      }
-      if (e.ctrlKey && e.key === 'n') {
-        e.preventDefault();
-        addRow();
-      }
-    };
+  // Generar contenido HTML para impresión (MODIFICADO con estilos inline)
+  const generateTicketContent = (order: Order, isKitchenTicket: boolean) => {
+    if (isKitchenTicket) {
+      // TICKET COCINA
+      return `
+        <div class="ticket" style="font-family: 'Courier New', monospace; font-size: 12px; line-height: 1.2; width: 72mm; margin: 0 auto; padding: 8px;">
+          <div style="text-align: center;">
+            <div style="font-weight: bold; text-transform: uppercase; font-size: 16px; margin-bottom: 5px;">${order.customerName.toUpperCase()}</div>
+            <div style="font-weight: bold;">** COCINA **</div>
+            <div style="border-top: 1px solid #000; margin: 6px 0;"></div>
+          </div>
+          
+          <div style="display: flex; justify-content: space-between; margin-bottom: 3px;">
+            <span style="font-weight: bold;">CLIENTE:</span>
+            <span>${order.customerName.toUpperCase()}</span>
+          </div>
+          <div style="display: flex; justify-content: space-between; margin-bottom: 3px;">
+            <span style="font-weight: bold;">AREA:</span>
+            <span>COCINA</span>
+          </div>
+          <div style="display: flex; justify-content: space-between; margin-bottom: 3px;">
+            <span style="font-weight: bold;">COMANDA:</span>
+            <span>#${getDisplayKitchenNumber()}</span>
+          </div>
+          <div style="display: flex; justify-content: space-between; margin-bottom: 3px;">
+            <span style="font-weight: bold;">FECHA:</span>
+            <span>${order.createdAt.toLocaleDateString('es-ES')} - ${order.createdAt.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })}</span>
+          </div>
+          <div style="display: flex; justify-content: space-between; margin-bottom: 3px;">
+            <span style="font-weight: bold;">ATENDIDO POR:</span>
+            <span>${getCurrentUserName().toUpperCase()}</span>
+          </div>
+          
+          <div style="border-top: 1px solid #000; margin: 6px 0;"></div>
+          
+          <div style="text-align: center; font-weight: bold; margin: 6px 0; text-transform: uppercase; border-bottom: 1px solid #000; padding-bottom: 3px;">DESCRIPCION</div>
+          
+          <div style="border-top: 1px solid #000; margin: 6px 0;"></div>
+          
+          ${order.items.map(item => `
+            <div style="display: flex; margin-bottom: 4px;">
+              <div style="width: 15%; font-weight: bold;">${item.quantity}x</div>
+              <div style="width: 85%; font-weight: bold; text-transform: uppercase;">${item.menuItem.name.toUpperCase()}</div>
+            </div>
+            ${item.notes ? `<div style="font-style: italic; font-size: 10px; margin-left: 12px; margin-bottom: 2px;">- ${item.notes}</div>` : ''}
+          `).join('')}
+          
+          <div style="border-top: 1px solid #000; margin: 6px 0;"></div>
+          
+          <div style="text-align: center;">
+            <div style="text-align: center; font-size: 9px; letter-spacing: 1px; margin: 3px 0;">********************************</div>
+          </div>
+        </div>
+      `;
+    } else {
+      // TICKET NORMAL ACTUALIZADO con método de pago
+      const subtotal = order.total / 1.18;
+      const igv = order.total - subtotal;
+      
+      return `
+        <div class="ticket" style="font-family: 'Courier New', monospace; font-size: 12px; line-height: 1.2; width: 72mm; margin: 0 auto; padding: 8px;">
+          <div style="text-align: center;">
+            <div style="font-weight: bold; font-size: 14px;">MARY'S RESTAURANT</div>
+            <div>Av. Isabel La Católica 1254</div>
+            <div>Tel: 941 778 599</div>
+            <div style="border-top: 1px solid #000; margin: 6px 0;"></div>
+          </div>
+          
+          <div style="display: flex; justify-content: space-between; margin-bottom: 3px;">
+            <span style="font-weight: bold;">ORDEN:</span>
+            <span>${getDisplayOrderNumber()}</span>
+          </div>
+          <div style="display: flex; justify-content: space-between; margin-bottom: 3px;">
+            <span style="font-weight: bold;">TIPO:</span>
+            <span>${getSourceText(order.source.type)}</span>
+          </div>
+          <div style="display: flex; justify-content: space-between; margin-bottom: 3px;">
+            <span style="font-weight: bold;">FECHA:</span>
+            <span>${order.createdAt.toLocaleDateString()}</span>
+          </div>
+          <div style="display: flex; justify-content: space-between; margin-bottom: 3px;">
+            <span style="font-weight: bold;">HORA:</span>
+            <span>${order.createdAt.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })}</span>
+          </div>
+          <div style="display: flex; justify-content: space-between; margin-bottom: 3px;">
+            <span style="font-weight: bold;">PAGO:</span>
+            <span>${getPaymentText()}</span>
+          </div>
+          
+          <div style="border-top: 1px solid #000; margin: 6px 0;"></div>
+          
+          <div style="display: flex; justify-content: space-between; margin-bottom: 3px; font-weight: bold;">
+            <span>CLIENTE:</span>
+            <span style="max-width: 60%; word-wrap: break-word;">${order.customerName.toUpperCase()}</span>
+          </div>
+          <div style="display: flex; justify-content: space-between; margin-bottom: 3px;">
+            <span>TELÉFONO:</span>
+            <span>${order.phone}</span>
+          </div>
+          ${order.tableNumber ? `
+          <div style="display: flex; justify-content: space-between; margin-bottom: 3px;">
+            <span>MESA:</span>
+            <span>${order.tableNumber}</span>
+          </div>
+          ` : ''}
+          
+          <div style="border-top: 1px solid #000; margin: 6px 0;"></div>
+          
+          <table style="width: 100%; border-collapse: collapse; margin: 5px 0;">
+            <thead>
+              <tr>
+                <th style="text-align: left; padding: 2px 0; border-bottom: 1px solid #000; font-weight: bold;">Cant</th>
+                <th style="text-align: left; padding: 2px 0; border-bottom: 1px solid #000; font-weight: bold;">Descripción</th>
+                <th style="text-align: right; padding: 2px 0; border-bottom: 1px solid #000; font-weight: bold;">Precio</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${order.items.map(item => `
+                <tr>
+                  <td style="padding: 2px 0; font-weight: bold;">${item.quantity}x</td>
+                  <td style="padding: 2px 0;">
+                    <div style="font-weight: bold; text-transform: uppercase;">${item.menuItem.name}</div>
+                    ${item.notes ? `<div style="font-style: italic; font-size: 10px; margin-left: 10px;">Nota: ${item.notes}</div>` : ''}
+                  </td>
+                  <td style="text-align: right; padding: 2px 0;">S/ ${(item.menuItem.price * item.quantity).toFixed(2)}</td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+          
+          <div style="border-top: 1px solid #000; margin: 6px 0;"></div>
+          
+          <div style="font-size: 11px;">
+            <div style="display: flex; justify-content: space-between; margin-bottom: 1px;">
+              <span>Subtotal:</span>
+              <span>S/ ${subtotal.toFixed(2)}</span>
+            </div>
+            <div style="display: flex; justify-content: space-between; margin-bottom: 1px;">
+              <span>IGV (18%):</span>
+              <span>S/ ${igv.toFixed(2)}</span>
+            </div>
+            <div style="display: flex; justify-content: space-between; border-top: 2px solid #000; padding-top: 5px; margin-top: 5px; font-weight: bold;">
+              <span>TOTAL:</span>
+              <span>S/ ${order.total.toFixed(2)}</span>
+            </div>
+          </div>
+          
+          <div style="border-top: 1px solid #000; margin: 6px 0;"></div>
+          
+          <div style="text-align: center;">
+            <div style="font-weight: bold;">¡GRACIAS POR SU PEDIDO!</div>
+            <div>*** ${getSourceText(order.source.type)} ***</div>
+            <div style="margin-top: 10px; font-size: 10px;">
+              ${new Date().toLocaleString('es-ES', { 
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit',
+                hour: '2-digit',
+                minute: '2-digit'
+              })}
+            </div>
+          </div>
+        </div>
+      `;
+    }
+  };
 
-    document.addEventListener('keydown', handleKeyDown);
-    return () => document.removeEventListener('keydown', handleKeyDown);
-  }, []);
+  // Funciones auxiliares
+  const getSourceText = (sourceType: Order['source']['type']) => {
+    const sourceMap = {
+      'phone': 'COCINA',
+      'walk-in': 'LOCAL', 
+      'delivery': 'DELIVERY',
+    };
+    return sourceMap[sourceType] || sourceType;
+  };
+
+  const generateFileName = (order: Order, isKitchenTicket: boolean) => {
+    const orderNumber = isKitchenTicket ? getDisplayKitchenNumber() : getDisplayOrderNumber();
+    const customerName = order.customerName
+      .toLowerCase()
+      .replace(/[^a-z0-9]/g, '-')
+      .replace(/-+/g, '-')
+      .replace(/^-|-$/g, '');
+    
+    const date = order.createdAt.toISOString().split('T')[0];
+    const type = isKitchenTicket ? 'cocina' : 'cliente';
+    
+    return `comanda-${orderNumber}-${customerName}-${date}-${type}.pdf`;
+  };
 
   return (
     <>
-      {/* VISTA EN PANTALLA - SE OCULTA AL IMPRIMIR */}
-      <div className="screen-container min-h-screen bg-gradient-to-br from-slate-50 to-gray-100 py-4 px-3 sm:py-8 sm:px-4 print:hidden font-sans">
-        {/* Header Responsive */}
-        <div className="max-w-4xl mx-auto mb-6 sm:mb-8">
-          <div className="text-center">
-            <div className="inline-flex flex-col sm:flex-row items-center justify-center gap-3 bg-white rounded-2xl px-4 py-4 sm:px-8 sm:py-6 shadow-sm border border-gray-200 mb-4 w-full">
-              <div className="w-12 h-12 sm:w-14 sm:h-14 bg-gradient-to-br from-slate-800 to-slate-900 rounded-xl flex items-center justify-center">
-                <span className="text-white text-xl sm:text-2xl">🍽️</span>
-              </div>
-              <div className="text-center sm:text-left mt-2 sm:mt-0">
-                <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 tracking-tight">MARY'S RESTAURANT</h1>
-                <p className="text-gray-600 text-xs sm:text-sm mt-1 font-normal">Sistema de registro de ventas</p>
-              </div>
-            </div>
-          </div>
-        </div>
+      <div style={{ display: 'flex', gap: '10px', margin: '10px 0' }}>
+        <button
+          onClick={handlePrint}
+          data-order-id={order.id}
+          className="print-button"
+          style={{
+            padding: '10px 20px',
+            backgroundColor: isPhoneOrder ? '#10b981' : '#007bff',
+            color: 'white',
+            border: 'none',
+            borderRadius: '4px',
+            cursor: 'pointer',
+            fontWeight: 'bold'
+          }}
+        >
+          {isPhoneOrder ? '📋 Ticket Cocina' : '🧾 Ticket Cliente'} #{isPhoneOrder ? getDisplayKitchenNumber() : getDisplayOrderNumber()}
+        </button>
 
-        {/* Main Content */}
-        <div className="max-w-4xl mx-auto">
-          {/* Alert Responsive */}
-          {alertMessage && (
-            <div className={`mb-4 sm:mb-6 p-3 sm:p-4 rounded-xl border ${
-              alertMessage.type === 'success' 
-                ? 'bg-emerald-50 border-emerald-200 text-emerald-800' 
-                : 'bg-rose-50 border-rose-200 text-rose-800'
-            }`}>
-              <div className="flex items-center justify-center gap-2">
-                <span className={`w-2 h-2 rounded-full ${
-                  alertMessage.type === 'success' ? 'bg-emerald-500' : 'bg-rose-500'
-                }`}></span>
-                <span className="font-medium text-sm">{alertMessage.text}</span>
-              </div>
-            </div>
-          )}
-
-          {/* Client Table Responsive */}
-          <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden mb-4 sm:mb-6">
-            <div className="px-4 py-4 sm:px-6 sm:py-5 border-b border-gray-200 bg-gray-50">
-              <h2 className="text-lg sm:text-xl font-semibold text-gray-900 text-center tracking-tight">Registro de Ventas</h2>
-              <p className="text-gray-600 text-xs sm:text-sm text-center mt-1 font-normal">Complete la información de los clientes</p>
-            </div>
-            
-            {/* Vista Desktop (tabla) */}
-            <div className="hidden md:block overflow-x-auto">
-              <table className="w-full">
-                <thead>
-                  <tr className="bg-slate-100 border-b border-gray-300">
-                    <th className="py-3 px-3 sm:py-4 sm:px-4 text-center text-xs font-semibold text-slate-700 uppercase tracking-wide w-12">#</th>
-                    <th className="py-3 px-3 sm:py-4 sm:px-4 text-center text-xs font-semibold text-slate-700 uppercase tracking-wide">Cliente</th>
-                    <th className="py-3 px-3 sm:py-4 sm:px-4 text-center text-xs font-semibold text-slate-700 uppercase tracking-wide w-28 sm:w-32">Pago</th>
-                    <th className="py-3 px-3 sm:py-4 sm:px-4 text-center text-xs font-semibold text-slate-700 uppercase tracking-wide w-24 sm:w-28">Monto (S/)</th>
-                    <th className="py-3 px-3 sm:py-4 sm:px-4 text-center text-xs font-semibold text-slate-700 uppercase tracking-wide w-14 sm:w-16">Acciones</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-200">
-                  {clients.map((client, index) => (
-                    <tr key={client.id} className="hover:bg-slate-50 transition-colors">
-                      <td className="py-3 px-3 sm:py-4 sm:px-4 text-sm font-medium text-gray-900 text-center">{index + 1}</td>
-                      <td className="py-3 px-3 sm:py-4 sm:px-4">
-                        <input 
-                          type="text" 
-                          className="w-full px-2 py-2 sm:px-3 sm:py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-slate-500 focus:border-transparent transition-all text-center font-normal"
-                          placeholder="Nombre del cliente"
-                          value={client.name}
-                          onChange={(e) => handleNameChange(client.id, e.target.value)}
-                        />
-                      </td>
-                      <td className="py-3 px-3 sm:py-4 sm:px-4">
-                        <div className="flex justify-center gap-1 sm:gap-2">
-                          <PaymentOption 
-                            value="efectivo"
-                            label="Efectivo"
-                            selected={client.paymentMethod === 'efectivo'}
-                            onSelect={() => handlePaymentChange(client.id, 'efectivo')}
-                            compact
-                          />
-                          <PaymentOption 
-                            value="yape"
-                            label="Yape"
-                            selected={client.paymentMethod === 'yape'}
-                            onSelect={() => handlePaymentChange(client.id, 'yape')}
-                            compact
-                          />
-                        </div>
-                      </td>
-                      <td className="py-3 px-3 sm:py-4 sm:px-4 text-center w-24 sm:w-28">
-                        <input 
-                          type="text" 
-                          className="w-full px-2 py-2 sm:px-3 sm:py-2.5 border border-gray-300 rounded-lg text-sm text-center font-medium focus:outline-none focus:ring-2 focus:ring-slate-500 focus:border-transparent transition-all"
-                          placeholder="0.00"
-                          value={client.amount}
-                          onChange={(e) => handleAmountChange(client.id, e.target.value)}
-                          onBlur={(e) => handleAmountBlur(client.id, e.target.value)}
-                        />
-                      </td>
-                      <td className="py-3 px-3 sm:py-4 sm:px-4 text-center">
-                        <button 
-                          className="inline-flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 text-gray-400 hover:text-rose-500 hover:bg-rose-50 rounded-lg transition-colors"
-                          onClick={() => deleteRow(client.id)}
-                          title="Eliminar fila"
-                        >
-                          <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                          </svg>
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-
-            {/* Vista Mobile (cards) */}
-            <div className="md:hidden space-y-3 p-3">
-              {clients.map((client, index) => (
-                <div key={client.id} className="bg-white border border-gray-200 rounded-lg p-4 shadow-sm">
-                  <div className="flex items-center justify-between mb-3">
-                    <span className="text-sm font-medium text-gray-900">Cliente #{index + 1}</span>
-                    <button 
-                      className="inline-flex items-center justify-center w-8 h-8 text-gray-400 hover:text-rose-500 hover:bg-rose-50 rounded-lg transition-colors"
-                      onClick={() => deleteRow(client.id)}
-                      title="Eliminar fila"
-                    >
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                      </svg>
-                    </button>
-                  </div>
-                  
-                  <div className="space-y-3">
-                    <div>
-                      <label className="block text-xs text-gray-600 mb-1">Nombre del Cliente</label>
-                      <input 
-                        type="text" 
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-slate-500 focus:border-transparent transition-all font-normal"
-                        placeholder="Escriba el nombre"
-                        value={client.name}
-                        onChange={(e) => handleNameChange(client.id, e.target.value)}
-                      />
-                    </div>
-                    
-                    <div>
-                      <label className="block text-xs text-gray-600 mb-1">Método de Pago</label>
-                      <div className="flex gap-2">
-                        <PaymentOption 
-                          value="efectivo"
-                          label="Efectivo"
-                          selected={client.paymentMethod === 'efectivo'}
-                          onSelect={() => handlePaymentChange(client.id, 'efectivo')}
-                          compact
-                        />
-                        <PaymentOption 
-                          value="yape"
-                          label="Yape"
-                          selected={client.paymentMethod === 'yape'}
-                          onSelect={() => handlePaymentChange(client.id, 'yape')}
-                          compact
-                        />
-                      </div>
-                    </div>
-                    
-                    <div>
-                      <label className="block text-xs text-gray-600 mb-1">Monto (S/)</label>
-                      <input 
-                        type="text" 
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm text-center font-medium focus:outline-none focus:ring-2 focus:ring-slate-500 focus:border-transparent transition-all"
-                        placeholder="0.00"
-                        value={client.amount}
-                        onChange={(e) => handleAmountChange(client.id, e.target.value)}
-                        onBlur={(e) => handleAmountBlur(client.id, e.target.value)}
-                      />
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Action Buttons Responsive */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 mb-6 sm:mb-8">
-            <button 
-              className="flex items-center justify-center gap-2 sm:gap-3 px-4 py-3 sm:px-6 sm:py-4 bg-white border border-gray-300 rounded-xl text-gray-700 font-medium hover:bg-gray-50 hover:border-gray-400 transition-all duration-200 shadow-sm text-sm"
-              onClick={addRow}
-            >
-              <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-              </svg>
-              <span className="hidden sm:inline">Agregar Cliente</span>
-              <span className="sm:hidden">Agregar</span>
-            </button>
-            
-            <button 
-              className="flex items-center justify-center gap-2 sm:gap-3 px-4 py-3 sm:px-6 sm:py-4 bg-white border border-gray-300 rounded-xl text-gray-700 font-medium hover:bg-gray-50 hover:border-gray-400 transition-all duration-200 shadow-sm text-sm"
-              onClick={clearAll}
-            >
-              <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-              </svg>
-              <span className="hidden sm:inline">Limpiar Todo</span>
-              <span className="sm:hidden">Limpiar</span>
-            </button>
-            
-            <button 
-              className="flex items-center justify-center gap-2 sm:gap-3 px-4 py-3 sm:px-6 sm:py-4 bg-gradient-to-r from-slate-800 to-slate-900 rounded-xl text-white font-medium hover:from-slate-900 hover:to-slate-950 transition-all duration-200 shadow-lg shadow-slate-500/25 text-sm"
-              onClick={handlePrint}
-            >
-              <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
-              </svg>
-              <span className="hidden sm:inline">Imprimir Recibo</span>
-              <span className="sm:hidden">Imprimir</span>
-            </button>
-          </div>
-
-          {/* Total Section Responsive */}
-          <div className="bg-gradient-to-r from-slate-100 to-slate-200 rounded-2xl p-6 sm:p-8 border border-slate-300 mb-6 sm:mb-8">
-            <div className="flex flex-col items-center text-center">
-              <h3 className="text-xl sm:text-2xl font-semibold text-slate-800 mb-2 tracking-tight">Total Vendido</h3>
-              <p className="text-slate-600 text-xs sm:text-sm mb-3 sm:mb-4 font-normal">Suma total de todas las ventas</p>
-              <div className="text-3xl sm:text-4xl font-bold text-slate-900 tracking-tight">S/ {total.toFixed(2)}</div>
-              <div className="text-xs sm:text-sm text-slate-600 mt-2 sm:mt-3 bg-white px-3 py-1 rounded-full border border-slate-300 font-normal">
-                {clients.length} cliente(s) registrado(s)
-              </div>
-            </div>
-          </div>
-
-          {/* Instructions Responsive */}
-          <div className="bg-slate-100 rounded-2xl p-4 sm:p-6 border border-slate-300">
-            <div className="flex items-start gap-3 sm:gap-4">
-              <div className="w-6 h-6 sm:w-8 sm:h-8 bg-slate-800 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
-                <svg className="w-3 h-3 sm:w-4 sm:h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
-                </svg>
-              </div>
-              <div className="flex-1">
-                <h4 className="font-semibold text-slate-900 text-base sm:text-lg mb-2 sm:mb-3 tracking-tight">Instrucciones de Uso</h4>
-                <div className="grid grid-cols-1 gap-2 sm:gap-3 text-slate-700 text-xs sm:text-sm">
-                  <div className="flex items-center gap-2">
-                    <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-slate-600 rounded-full"></div>
-                    <span className="font-normal">Complete el nombre del cliente y el monto</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-slate-600 rounded-full"></div>
-                    <span className="font-normal">Seleccione el método de pago</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-slate-600 rounded-full"></div>
-                    <span className="font-normal">Agregue más clientes si es necesario</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-slate-600 rounded-full"></div>
-                    <span className="font-normal">Presione "Imprimir Recibo" para el ticket</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
+        <button
+          onClick={handleDownloadPDF}
+          className="download-pdf-button"
+          style={{
+            padding: '10px 20px',
+            backgroundColor: '#28a745',
+            color: 'white',
+            border: 'none',
+            borderRadius: '4px',
+            cursor: 'pointer',
+            fontWeight: 'bold'
+          }}
+        >
+          Descargar PDF
+        </button>
       </div>
 
-      {/* VISTA PARA IMPRESIÓN POS - SOLO SE MUESTRA AL IMPRIMIR */}
-      <div className="pos-container hidden print:block w-[80mm] bg-white p-[5mm] mx-auto font-mono text-[11px] leading-tight box-border">
-        <div className="pos-header text-center border-b-2 border-black py-3 mb-2">
-          <div className="pos-title text-lg font-bold mb-2 tracking-widest">MARY'S RESTAURANT</div>
-          <div className="pos-subtitle text-[10px]">RUC: 20505262086</div>
-          <div className="pos-subtitle text-[10px]">Fecha: {currentDateTime.date}</div>
-          <div className="pos-subtitle text-[10px]">Hora: {currentDateTime.time}</div>
-        </div>
-        
-        <div className="client-row header-row flex border-b-2 border-black py-2 font-bold">
-          <div className="client-number w-[12%] text-center">N°</div>
-          <div className="client-name w-[48%] px-1 text-center">CLIENTE</div>
-          <div className="client-payment w-[20%] text-center">PAGO</div>
-          <div className="client-amount w-[20%] text-right pr-1">MONTO</div>
-        </div>
-        
-        <div id="posContent" ref={posContentRef}>
-          {/* Aquí se inserta el contenido dinámicamente */}
-        </div>
-        
-        <div className="pos-total text-right mt-3 pt-2 border-t-2 border-black text-xs font-bold">
-          <div className="pos-total-label text-[11px] mb-1">======════════════════</div>
-          <div className="pos-total-amount text-base" id="posTotalAmount" ref={posTotalAmountRef}>TOTAL: S/ 0.00</div>
-          <div className="pos-total-label text-[11px] mt-1">======════════════════</div>
-        </div>
-        
-        <div className="pos-footer text-center mt-5 pt-3 border-t-2 border-dashed border-black text-[10px] leading-relaxed">
-          <div className="font-bold text-[11px]">*** REGISTRO DE VENTAS ***</div>
-          <div style={{ margin: '8px 0' }}>generado por @jozzymar</div>
-          <div>@restaurantmarys</div>
-          
-          {/* ESPACIO EXTRA PARA CORTE MANUAL */}
-          <div style={{ 
-            height: '25mm', 
-            borderTop: '2px dashed #000',
-            marginTop: '10px',
-            textAlign: 'center',
-            fontSize: '8px',
-            color: '#666',
-            paddingTop: '5px'
-          }}>
-            --- CORTAR AQUÍ ---
-          </div>
-        </div>
+      <div id={`ticket-${order.id}`} style={{ display: 'none' }}>
+        <div>Ticket content for printing</div>
       </div>
-
-      {/* ESTILOS DE IMPRESIÓN EN COMPONENTE */}
-      <style>{`
-        @media print {
-          * {
-            -webkit-print-color-adjust: exact !important;
-            print-color-adjust: exact !important;
-          }
-          body {
-            background: white !important;
-            padding: 0 !important;
-            margin: 0 !important;
-            width: 80mm !important;
-            min-height: auto !important;
-            height: auto !important;
-          }
-          .screen-container {
-            display: none !important;
-          }
-          .pos-container {
-            display: block !important;
-            width: 80mm !important;
-            padding: 5mm !important;
-            padding-bottom: 0 !important;
-            margin: 0 !important;
-            font-family: 'Courier New', monospace !important;
-            font-size: 11px !important;
-            line-height: 1.4 !important;
-            box-sizing: border-box !important;
-          }
-          .pos-header {
-            page-break-inside: avoid !important;
-          }
-          .client-row {
-            page-break-inside: avoid !important;
-          }
-          .pos-footer {
-            page-break-inside: avoid !important;
-            margin-top: 15px !important;
-            padding-bottom: 0 !important;
-            margin-bottom: 0 !important;
-          }
-          .pos-footer::after {
-            content: "";
-            display: block;
-            page-break-after: always !important;
-          }
-        }
-        
-        @page {
-          size: 80mm auto;
-          margin: 0;
-          margin-bottom: 0;
-        }
-
-        .pos-container {
-          display: none;
-        }
-
-        .client-row {
-          display: flex;
-          border-bottom: 1px dotted #999;
-          padding: 8px 0;
-          font-size: 10px;
-          line-height: 1.5;
-          min-height: 32px;
-          align-items: center;
-        }
-        .client-number {
-          width: 12%;
-          text-align: center;
-          font-weight: bold;
-          font-size: 10px;
-        }
-        .client-name {
-          width: 48%;
-          padding: 0 5px;
-          word-break: break-word;
-          line-height: 1.4;
-          font-weight: bold;
-          font-size: 12px !important;
-        }
-        .client-payment {
-          width: 20%;
-          text-align: center;
-          line-height: 1.4;
-          font-size: 10px;
-        }
-        .client-amount {
-          width: 20%;
-          text-align: right;
-          padding-right: 5px;
-          font-weight: bold;
-          line-height: 1.4;
-          font-size: 10px;
-          word-break: keep-all;
-        }
-        .payment-option-print {
-          border: 1.5px solid #000;
-          padding: 3px 6px;
-          font-size: 8px;
-          display: inline-block;
-          min-width: 45px;
-          font-weight: bold;
-        }
-        .payment-option-print.yape {
-          border: 2px solid #000;
-        }
-        .payment-option-print.efectivo {
-          border: 2px solid #000;
-        }
-        .header-row {
-          font-weight: bold;
-          border-bottom: 2px solid #000 !important;
-          background: none !important;
-          padding: 10px 0 !important;
-        }
-      `}</style>
     </>
   );
 };
 
-export default RestaurantPOS;
+export default OrderTicket;
