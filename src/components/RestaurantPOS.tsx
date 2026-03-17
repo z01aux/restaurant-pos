@@ -1,127 +1,175 @@
 import React, { useState, useEffect, useCallback } from 'react';
 
-// Usamos require en lugar de import para evitar problemas de tipos
-const { PDFDownloadLink, Document, Page, Text, View, StyleSheet } = require('@react-pdf/renderer');
+// Cargamos react-pdf de manera dinámica para evitar problemas de tipos
+const PDFLib = {
+  PDFDownloadLink: (props: any) => {
+    const [isClient, setIsClient] = useState(false);
+    
+    useEffect(() => {
+      setIsClient(true);
+    }, []);
 
-// Estilos para PDF
-const styles = StyleSheet.create({
-  page: {
-    padding: 20,
-    fontSize: 11,
-    fontFamily: 'Helvetica'
-  },
-  header: {
-    textAlign: 'center',
-    marginBottom: 15,
-    borderBottomWidth: 2,
-    borderBottomColor: '#000',
-    paddingBottom: 10
-  },
-  title: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    marginBottom: 5
-  },
-  subtitle: {
-    fontSize: 10,
-    marginBottom: 3
-  },
-  row: {
-    flexDirection: 'row',
-    borderBottomWidth: 1,
-    borderBottomColor: '#999',
-    borderBottomStyle: 'dotted',
-    paddingVertical: 6,
-    alignItems: 'center'
-  },
-  headerRow: {
-    flexDirection: 'row',
-    borderBottomWidth: 2,
-    borderBottomColor: '#000',
-    paddingVertical: 8,
-    fontWeight: 'bold'
-  },
-  colNumber: {
-    width: '12%',
-    textAlign: 'center'
-  },
-  colName: {
-    width: '48%',
-    paddingHorizontal: 5
-  },
-  colPayment: {
-    width: '20%',
-    textAlign: 'center'
-  },
-  colAmount: {
-    width: '20%',
-    textAlign: 'right',
-    paddingRight: 5
-  },
-  total: {
-    marginTop: 15,
-    paddingTop: 10,
-    borderTopWidth: 2,
-    borderTopColor: '#000',
-    textAlign: 'right',
-    fontSize: 12,
-    fontWeight: 'bold'
-  },
-  footer: {
-    marginTop: 20,
-    textAlign: 'center',
-    fontSize: 10,
-    paddingTop: 15,
-    borderTopWidth: 2,
-    borderTopColor: '#000',
-    borderTopStyle: 'dashed'
+    if (!isClient) {
+      return (
+        <button 
+          className="w-full flex items-center justify-center gap-2 px-4 py-3.5 bg-gradient-to-r from-emerald-600 to-emerald-700 rounded-xl text-white font-medium opacity-75"
+          disabled
+        >
+          <svg className="w-5 h-5 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+          </svg>
+          <span>Cargando PDF...</span>
+        </button>
+      );
+    }
+
+    try {
+      // @ts-ignore
+      const { PDFDownloadLink: Link } = require('@react-pdf/renderer');
+      return <Link {...props} />;
+    } catch (error) {
+      return (
+        <button 
+          className="w-full flex items-center justify-center gap-2 px-4 py-3.5 bg-orange-500 rounded-xl text-white font-medium"
+          onClick={() => window.print()}
+        >
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
+          </svg>
+          <span>Usar impresión</span>
+        </button>
+      );
+    }
   }
-});
+};
 
-// Componente PDF
-const POSPDF = ({ clients, total, dateTime }: any) => (
-  <Document>
-    <Page size={[226, 'auto']} style={styles.page} wrap>
-      <View style={styles.header} fixed>
-        <Text style={styles.title}>MARY'S RESTAURANT</Text>
-        <Text style={styles.subtitle}>RUC: 20505262086</Text>
-        <Text style={styles.subtitle}>Fecha: {dateTime.date}</Text>
-        <Text style={styles.subtitle}>Hora: {dateTime.time}</Text>
-      </View>
+// Componente PDF (lo definimos aunque no lo usemos directamente)
+const createPDFDocument = (clients: any[], total: number, dateTime: any) => {
+  try {
+    // @ts-ignore
+    const { Document, Page, Text, View, StyleSheet } = require('@react-pdf/renderer');
+    
+    const styles = StyleSheet.create({
+      page: {
+        padding: 20,
+        fontSize: 11,
+        fontFamily: 'Helvetica'
+      },
+      header: {
+        textAlign: 'center',
+        marginBottom: 15,
+        borderBottomWidth: 2,
+        borderBottomColor: '#000',
+        paddingBottom: 10
+      },
+      title: {
+        fontSize: 16,
+        fontWeight: 'bold',
+        marginBottom: 5
+      },
+      subtitle: {
+        fontSize: 10,
+        marginBottom: 3
+      },
+      row: {
+        flexDirection: 'row',
+        borderBottomWidth: 1,
+        borderBottomColor: '#999',
+        borderBottomStyle: 'dotted',
+        paddingVertical: 6,
+        alignItems: 'center'
+      },
+      headerRow: {
+        flexDirection: 'row',
+        borderBottomWidth: 2,
+        borderBottomColor: '#000',
+        paddingVertical: 8,
+        fontWeight: 'bold'
+      },
+      colNumber: {
+        width: '12%',
+        textAlign: 'center'
+      },
+      colName: {
+        width: '48%',
+        paddingHorizontal: 5
+      },
+      colPayment: {
+        width: '20%',
+        textAlign: 'center'
+      },
+      colAmount: {
+        width: '20%',
+        textAlign: 'right',
+        paddingRight: 5
+      },
+      total: {
+        marginTop: 15,
+        paddingTop: 10,
+        borderTopWidth: 2,
+        borderTopColor: '#000',
+        textAlign: 'right',
+        fontSize: 12,
+        fontWeight: 'bold'
+      },
+      footer: {
+        marginTop: 20,
+        textAlign: 'center',
+        fontSize: 10,
+        paddingTop: 15,
+        borderTopWidth: 2,
+        borderTopColor: '#000',
+        borderTopStyle: 'dashed'
+      }
+    });
 
-      <View style={styles.headerRow}>
-        <Text style={styles.colNumber}>N°</Text>
-        <Text style={styles.colName}>CLIENTE</Text>
-        <Text style={styles.colPayment}>PAGO</Text>
-        <Text style={styles.colAmount}>MONTO</Text>
-      </View>
-
-      {clients.map((client: any, index: number) => {
-        const amount = parseFloat(client.amount) || 0;
-        return (
-          <View style={styles.row} key={client.id} wrap={false}>
-            <Text style={styles.colNumber}>{index + 1}</Text>
-            <Text style={styles.colName}>{client.name.toUpperCase() || '(SIN NOMBRE)'}</Text>
-            <Text style={styles.colPayment}>
-              {client.paymentMethod ? client.paymentMethod.toUpperCase() : '---'}
-            </Text>
-            <Text style={styles.colAmount}>S/ {amount.toFixed(2)}</Text>
+    return (
+      <Document>
+        <Page size={[226, 'auto']} style={styles.page} wrap>
+          <View style={styles.header} fixed>
+            <Text style={styles.title}>MARY'S RESTAURANT</Text>
+            <Text style={styles.subtitle}>RUC: 20505262086</Text>
+            <Text style={styles.subtitle}>Fecha: {dateTime.date}</Text>
+            <Text style={styles.subtitle}>Hora: {dateTime.time}</Text>
           </View>
-        );
-      })}
 
-      <View style={styles.total}>
-        <Text>TOTAL: S/ {total.toFixed(2)}</Text>
-      </View>
+          <View style={styles.headerRow}>
+            <Text style={styles.colNumber}>N°</Text>
+            <Text style={styles.colName}>CLIENTE</Text>
+            <Text style={styles.colPayment}>PAGO</Text>
+            <Text style={styles.colAmount}>MONTO</Text>
+          </View>
 
-      <View style={styles.footer}>
-        <Text>*** REGISTRO DE VENTAS ***</Text>
-        <Text style={{ marginTop: 5 }}>generado por @jozzymar</Text>
-        <Text>@restaurantmarys</Text>
-      </View>
-    </Page>
-  </Document>
-);
+          {clients.map((client: any, index: number) => {
+            const amount = parseFloat(client.amount) || 0;
+            return (
+              <View style={styles.row} key={client.id} wrap={false}>
+                <Text style={styles.colNumber}>{index + 1}</Text>
+                <Text style={styles.colName}>{client.name.toUpperCase() || '(SIN NOMBRE)'}</Text>
+                <Text style={styles.colPayment}>
+                  {client.paymentMethod ? client.paymentMethod.toUpperCase() : '---'}
+                </Text>
+                <Text style={styles.colAmount}>S/ {amount.toFixed(2)}</Text>
+              </View>
+            );
+          })}
+
+          <View style={styles.total}>
+            <Text>TOTAL: S/ {total.toFixed(2)}</Text>
+          </View>
+
+          <View style={styles.footer}>
+            <Text>*** REGISTRO DE VENTAS ***</Text>
+            <Text style={{ marginTop: 5 }}>generado por @jozzymar</Text>
+            <Text>@restaurantmarys</Text>
+          </View>
+        </Page>
+      </Document>
+    );
+  } catch (error) {
+    return null;
+  }
+};
 
 interface Client {
   id: number;
@@ -163,7 +211,6 @@ const RestaurantPOS: React.FC = () => {
   const [total, setTotal] = useState<number>(0);
   const [alertMessage, setAlertMessage] = useState<{ text: string, type: 'success' | 'error' } | null>(null);
   const [currentDateTime, setCurrentDateTime] = useState<{ date: string, time: string }>({ date: '', time: '' });
-  const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
 
   const updateDateTime = useCallback(() => {
     const now = new Date();
@@ -283,7 +330,7 @@ const RestaurantPOS: React.FC = () => {
     );
   };
 
-  // Componente PDF simplificado sin tipos complejos
+  // Componente PDF simplificado
   const PDFButton = () => {
     const validClients = getValidClients();
     
@@ -301,33 +348,39 @@ const RestaurantPOS: React.FC = () => {
       );
     }
 
-    // Usamos un enfoque diferente para evitar problemas de tipos
-    return (
-      <div className="w-full">
-        <PDFDownloadLink
-          document={<POSPDF clients={validClients} total={total} dateTime={currentDateTime} />}
-          fileName={`venta-${currentDateTime.date.replace(/\//g, '-')}.pdf`}
+    const pdfDocument = createPDFDocument(validClients, total, currentDateTime);
+    
+    if (!pdfDocument) {
+      return (
+        <button 
+          className="w-full flex items-center justify-center gap-2 px-4 py-3.5 bg-orange-500 rounded-xl text-white font-medium hover:bg-orange-600 transition-all"
+          onClick={() => window.print()}
         >
-          {({ loading }: { loading: boolean }) => {
-            // Actualizamos el estado local para el loading
-            if (loading !== isGeneratingPDF) {
-              setTimeout(() => setIsGeneratingPDF(loading), 0);
-            }
-            
-            return (
-              <button 
-                className="w-full flex items-center justify-center gap-2 px-4 py-3.5 bg-gradient-to-r from-emerald-600 to-emerald-700 rounded-xl text-white font-medium hover:from-emerald-700 hover:to-emerald-800 transition-all shadow-lg shadow-emerald-500/25"
-                disabled={loading}
-              >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                </svg>
-                <span>{loading ? 'Generando...' : 'PDF'}</span>
-              </button>
-            );
-          }}
-        </PDFDownloadLink>
-      </div>
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
+          </svg>
+          <span>Imprimir ticket</span>
+        </button>
+      );
+    }
+
+    return (
+      <PDFLib.PDFDownloadLink
+        document={pdfDocument}
+        fileName={`venta-${currentDateTime.date.replace(/\//g, '-')}.pdf`}
+      >
+        {({ loading }: { loading: boolean }) => (
+          <button 
+            className="w-full flex items-center justify-center gap-2 px-4 py-3.5 bg-gradient-to-r from-emerald-600 to-emerald-700 rounded-xl text-white font-medium hover:from-emerald-700 hover:to-emerald-800 transition-all shadow-lg shadow-emerald-500/25"
+            disabled={loading}
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            </svg>
+            <span>{loading ? 'Generando...' : 'Descargar PDF'}</span>
+          </button>
+        )}
+      </PDFLib.PDFDownloadLink>
     );
   };
 
@@ -614,15 +667,6 @@ const RestaurantPOS: React.FC = () => {
           </div>
         </div>
       </div>
-
-      {/* Estilos de impresión */}
-      <style>{`
-        @media print {
-          .min-h-screen {
-            display: none !important;
-          }
-        }
-      `}</style>
     </>
   );
 };
