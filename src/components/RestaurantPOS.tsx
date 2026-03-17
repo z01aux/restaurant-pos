@@ -1,6 +1,37 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import jsPDF from 'jspdf';
 
-// Componente PDF simplificado sin usar require
+interface Client {
+  id: number;
+  name: string;
+  paymentMethod: 'efectivo' | 'yape' | '';
+  amount: string;
+}
+
+interface PaymentOptionProps {
+  value: 'efectivo' | 'yape';
+  label: string;
+  selected: boolean;
+  onSelect: () => void;
+}
+
+const PaymentOption: React.FC<PaymentOptionProps> = ({ value, label, selected, onSelect }) => {
+  return (
+    <button
+      className={`flex-1 sm:flex-none px-4 py-3 sm:px-4 sm:py-2.5 rounded-xl sm:rounded-lg font-medium transition-all duration-200 border-2 ${
+        selected
+          ? value === 'efectivo'
+            ? 'border-emerald-500 bg-emerald-500 text-white shadow-lg shadow-emerald-200'
+            : 'border-violet-500 bg-violet-500 text-white shadow-lg shadow-violet-200'
+          : 'border-gray-200 bg-white text-gray-600 hover:border-gray-300 hover:bg-gray-50'
+      }`}
+      onClick={onSelect}
+    >
+      {label}
+    </button>
+  );
+};
+
 const RestaurantPOS: React.FC = () => {
   const [clients, setClients] = useState<Client[]>([
     { id: 1, name: '', paymentMethod: '', amount: '' },
@@ -129,82 +160,108 @@ const RestaurantPOS: React.FC = () => {
     );
   };
 
-  // Función para generar el contenido del ticket
-  const generateTicketContent = () => {
+  const generatePDF = () => {
     const validClients = getValidClients();
-    let content = `
-      MARY'S RESTAURANT
-      RUC: 20505262086
-      Fecha: ${currentDateTime.date}
-      Hora: ${currentDateTime.time}
-      
-      N°  CLIENTE           PAGO      MONTO
-    `;
     
-    validClients.forEach((client, index) => {
-      const amount = parseFloat(client.amount).toFixed(2);
-      const payment = client.paymentMethod.toUpperCase().padEnd(8);
-      const name = client.name.substring(0, 15).padEnd(15);
-      content += `\n${(index + 1).toString().padEnd(3)} ${name} ${payment} S/ ${amount}`;
-    });
-    
-    content += `\n\nTOTAL: S/ ${total.toFixed(2)}`;
-    content += `\n\n*** REGISTRO DE VENTAS ***`;
-    content += `\ngenerado por @jozzymar`;
-    content += `\n@restaurantmarys`;
-    
-    return content;
-  };
-
-  const handleDownloadTxt = () => {
-    const validClients = getValidClients();
     if (validClients.length === 0) {
-      showAlert('No hay datos para descargar', 'error');
+      showAlert('No hay datos para generar PDF', 'error');
       return;
     }
-    
-    const content = generateTicketContent();
-    const blob = new Blob([content], { type: 'text/plain' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `venta-${currentDateTime.date.replace(/\//g, '-')}.txt`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-    showAlert('Archivo TXT descargado correctamente', 'success');
-  };
 
-  interface Client {
-    id: number;
-    name: string;
-    paymentMethod: 'efectivo' | 'yape' | '';
-    amount: string;
-  }
-  
-  interface PaymentOptionProps {
-    value: 'efectivo' | 'yape';
-    label: string;
-    selected: boolean;
-    onSelect: () => void;
-  }
-  
-  const PaymentOption: React.FC<PaymentOptionProps> = ({ value, label, selected, onSelect }) => {
-    return (
-      <button
-        className={`flex-1 sm:flex-none px-4 py-3 sm:px-4 sm:py-2.5 rounded-xl sm:rounded-lg font-medium transition-all duration-200 border-2 ${
-          selected
-            ? value === 'efectivo'
-              ? 'border-emerald-500 bg-emerald-500 text-white shadow-lg shadow-emerald-200'
-              : 'border-violet-500 bg-violet-500 text-white shadow-lg shadow-violet-200'
-            : 'border-gray-200 bg-white text-gray-600 hover:border-gray-300 hover:bg-gray-50'
-        }`}
-        onClick={onSelect}
-      >
-        {label}
-      </button>
-    );
+    try {
+      // Crear nuevo documento PDF en formato ticket (80mm de ancho)
+      const doc = new jsPDF({
+        orientation: 'portrait',
+        unit: 'mm',
+        format: [80, 297] // Ancho 80mm, alto automático
+      });
+
+      let yPos = 10;
+      const lineHeight = 5;
+      const margin = 5;
+
+      // Configurar fuente monoespaciada
+      doc.setFont('courier', 'normal');
+      doc.setFontSize(8);
+
+      // Header
+      doc.setFontSize(10);
+      doc.setFont('courier', 'bold');
+      doc.text('MARY\'S RESTAURANT', margin, yPos, { align: 'left' });
+      yPos += lineHeight;
+      
+      doc.setFontSize(8);
+      doc.setFont('courier', 'normal');
+      doc.text('RUC: 20505262086', margin, yPos);
+      yPos += lineHeight;
+      doc.text(`Fecha: ${currentDateTime.date}`, margin, yPos);
+      yPos += lineHeight;
+      doc.text(`Hora: ${currentDateTime.time}`, margin, yPos);
+      yPos += lineHeight * 1.5;
+
+      // Línea separadora
+      doc.setLineWidth(0.3);
+      doc.line(margin, yPos - 2, 75, yPos - 2);
+      
+      // Encabezados de tabla
+      doc.setFont('courier', 'bold');
+      doc.text('N°', margin, yPos);
+      doc.text('CLIENTE', margin + 8, yPos);
+      doc.text('PAGO', margin + 45, yPos);
+      doc.text('MONTO', margin + 60, yPos);
+      yPos += lineHeight;
+      
+      doc.setFont('courier', 'normal');
+      doc.line(margin, yPos - 2, 75, yPos - 2);
+
+      // Datos de clientes
+      validClients.forEach((client, index) => {
+        const amount = parseFloat(client.amount).toFixed(2);
+        const payment = client.paymentMethod.toUpperCase().substring(0, 4);
+        const name = client.name.substring(0, 15);
+        
+        doc.text(`${index + 1}`, margin, yPos);
+        doc.text(name, margin + 8, yPos);
+        doc.text(payment, margin + 45, yPos);
+        doc.text(`S/ ${amount}`, margin + 60, yPos);
+        yPos += lineHeight;
+      });
+
+      // Línea separadora
+      yPos += lineHeight / 2;
+      doc.line(margin, yPos - 2, 75, yPos - 2);
+      
+      // Total
+      doc.setFont('courier', 'bold');
+      doc.text(`TOTAL: S/ ${total.toFixed(2)}`, margin + 40, yPos + lineHeight);
+      yPos += lineHeight * 2;
+
+      // Footer
+      doc.setFont('courier', 'normal');
+      doc.setFontSize(7);
+      doc.text('*** REGISTRO DE VENTAS ***', margin, yPos);
+      yPos += lineHeight;
+      doc.text('generado por @jozzymar', margin, yPos);
+      yPos += lineHeight;
+      doc.text('@restaurantmarys', margin, yPos);
+      
+      // Línea de corte
+      yPos += lineHeight * 2;
+      doc.setLineWidth(0.2);
+      doc.setDrawColor(150);
+      doc.line(margin, yPos, 75, yPos);
+      yPos += lineHeight / 2;
+      doc.setFontSize(5);
+      doc.text('--- CORTAR AQUÍ ---', margin + 25, yPos);
+
+      // Guardar PDF
+      doc.save(`venta-${currentDateTime.date.replace(/\//g, '-')}.pdf`);
+      showAlert('PDF generado correctamente', 'success');
+
+    } catch (error) {
+      console.error('Error al generar PDF:', error);
+      showAlert('Error al generar el PDF', 'error');
+    }
   };
 
   return (
@@ -433,13 +490,13 @@ const RestaurantPOS: React.FC = () => {
 
             <button 
               className="col-span-1 flex items-center justify-center gap-2 px-4 py-3.5 bg-gradient-to-r from-emerald-600 to-emerald-700 rounded-xl text-white font-medium hover:from-emerald-700 hover:to-emerald-800 transition-all shadow-lg shadow-emerald-500/25 disabled:opacity-50 disabled:cursor-not-allowed"
-              onClick={handleDownloadTxt}
+              onClick={generatePDF}
               disabled={getValidClients().length === 0}
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
               </svg>
-              <span>Descargar TXT</span>
+              <span>PDF</span>
             </button>
           </div>
 
