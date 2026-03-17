@@ -14,8 +14,8 @@
     "strict": true,
     "noUnusedLocals": true,
     "noUnusedParameters": true,
-    "noFallthroughCasesInSwitch": true,
-    "types": ["node", "react", "react-dom"]
+    "noFallthroughCasesInSwitch": true
+    // Eliminamos la línea "types": ["node"]
   },
   "include": ["src"],
   "references": [{ "path": "./tsconfig.node.json" }]
