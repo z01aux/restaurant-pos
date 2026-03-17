@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
+// @ts-ignore
 import { PDFDownloadLink, Document, Page, Text, View, StyleSheet } from '@react-pdf/renderer';
 
 // Estilos para PDF
@@ -280,45 +281,6 @@ const RestaurantPOS: React.FC = () => {
     );
   };
 
-  // PDF Download Button Component
-  const PDFDownloadButton = () => {
-    const validClients = getValidClients();
-    
-    if (validClients.length === 0) {
-      return (
-        <button 
-          className="w-full flex items-center justify-center gap-2 px-4 py-3.5 bg-gray-400 rounded-xl text-white font-medium cursor-not-allowed opacity-50"
-          disabled
-        >
-          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-          </svg>
-          <span>Sin datos para PDF</span>
-        </button>
-      );
-    }
-
-    return (
-      <PDFDownloadLink
-        document={<POSPDF clients={validClients} total={total} dateTime={currentDateTime} />}
-        fileName={`venta-${currentDateTime.date.replace(/\//g, '-')}.pdf`}
-        className="w-full"
-      >
-        {({ loading }) => (
-          <button 
-            className="w-full flex items-center justify-center gap-2 px-4 py-3.5 bg-gradient-to-r from-emerald-600 to-emerald-700 rounded-xl text-white font-medium hover:from-emerald-700 hover:to-emerald-800 transition-all shadow-lg shadow-emerald-500/25"
-            disabled={loading}
-          >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-            </svg>
-            <span>{loading ? 'Generando PDF...' : 'Descargar PDF'}</span>
-          </button>
-        )}
-      </PDFDownloadLink>
-    );
-  };
-
   return (
     <>
       {/* VISTA EN PANTALLA - DISEÑO MEJORADO */}
@@ -549,7 +511,34 @@ const RestaurantPOS: React.FC = () => {
             </button>
 
             <div className="col-span-1">
-              <PDFDownloadButton />
+              {getValidClients().length > 0 ? (
+                <PDFDownloadLink
+                  document={<POSPDF clients={getValidClients()} total={total} dateTime={currentDateTime} />}
+                  fileName={`venta-${currentDateTime.date.replace(/\//g, '-')}.pdf`}
+                >
+                  {({ loading }: { loading: boolean }) => (
+                    <button 
+                      className="w-full flex items-center justify-center gap-2 px-4 py-3.5 bg-gradient-to-r from-emerald-600 to-emerald-700 rounded-xl text-white font-medium hover:from-emerald-700 hover:to-emerald-800 transition-all shadow-lg shadow-emerald-500/25"
+                      disabled={loading}
+                    >
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                      </svg>
+                      <span>{loading ? 'Generando...' : 'PDF'}</span>
+                    </button>
+                  )}
+                </PDFDownloadLink>
+              ) : (
+                <button 
+                  className="w-full flex items-center justify-center gap-2 px-4 py-3.5 bg-gray-400 rounded-xl text-white font-medium cursor-not-allowed opacity-50"
+                  disabled
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                  </svg>
+                  <span>Sin datos</span>
+                </button>
+              )}
             </div>
           </div>
 
