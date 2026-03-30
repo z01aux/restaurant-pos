@@ -119,11 +119,25 @@ const RestaurantPOS: React.FC = () => {
     isOpen: false,
     onConfirm: () => {},
   });
-  const [isDarkMode, setIsDarkMode] = useState(false);
+  
+  // Cargar tema guardado del localStorage al iniciar
+  const [isDarkMode, setIsDarkMode] = useState(() => {
+    const savedTheme = localStorage.getItem('theme');
+    if (savedTheme) {
+      return savedTheme === 'dark';
+    }
+    // Opcional: detectar preferencia del sistema
+    return window.matchMedia('(prefers-color-scheme: dark)').matches;
+  });
 
   const toggleTheme = () => {
     setIsDarkMode(!isDarkMode);
   };
+
+  // Guardar tema en localStorage cuando cambie
+  useEffect(() => {
+    localStorage.setItem('theme', isDarkMode ? 'dark' : 'light');
+  }, [isDarkMode]);
 
   // Efecto para cambiar el theme-color dinámicamente
   useEffect(() => {
@@ -300,7 +314,7 @@ const RestaurantPOS: React.FC = () => {
       const fileName = `REG_VEN_${dateForName}_${timeForName}.pdf`;
       
       doc.save(fileName);
-      showAlert(`Ticket guardado`, 'success');
+      showAlert('Ticket guardado', 'success');
     } catch (error) {
       console.error('Error al generar PDF:', error);
       showAlert('Error al generar', 'error');
@@ -440,7 +454,7 @@ const RestaurantPOS: React.FC = () => {
                     <th className={`px-3 py-2 text-left text-xs font-semibold ${textSecondaryStyles} w-48 transition-colors duration-300`}>Pago</th>
                     <th className={`px-3 py-2 text-left text-xs font-semibold ${textSecondaryStyles} w-24 transition-colors duration-300`}>Monto</th>
                     <th className="px-3 py-2 w-10"></th>
-                  </tr>
+                   </tr>
                 </thead>
                 <tbody className={`divide-y ${isDarkMode ? 'divide-gray-800' : 'divide-gray-100'}`}>
                   {clients.map((client, index) => (
