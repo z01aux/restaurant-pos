@@ -125,6 +125,15 @@ const RestaurantPOS: React.FC = () => {
     setIsDarkMode(!isDarkMode);
   };
 
+  // Efecto para cambiar el theme-color dinámicamente
+  useEffect(() => {
+    const metaThemeColor = document.querySelector('meta[name="theme-color"]');
+    if (metaThemeColor) {
+      const newColor = isDarkMode ? '#030712' : '#ffffff';
+      metaThemeColor.setAttribute('content', newColor);
+    }
+  }, [isDarkMode]);
+
   const updateDateTime = useCallback(() => {
     const now = new Date();
     setCurrentDateTime({
@@ -285,9 +294,15 @@ const RestaurantPOS: React.FC = () => {
       yPos += lineHeight;
       doc.text('generado por @jozzymar', pageWidth / 2, yPos, { align: 'center' });
 
-      doc.save(`ticket-${currentDateTime.date.replace(/\//g, '-')}.pdf`);
-      showAlert('Ticket generado', 'success');
+      // Nombre del archivo mejorado para móvil
+      const dateForName = currentDateTime.date.replace(/\//g, '-');
+      const timeForName = currentDateTime.time.replace(/:/g, '-');
+      const fileName = `REG_VEN_${dateForName}_${timeForName}.pdf`;
+      
+      doc.save(fileName);
+      showAlert(`Ticket guardado`, 'success');
     } catch (error) {
+      console.error('Error al generar PDF:', error);
       showAlert('Error al generar', 'error');
     }
   };
