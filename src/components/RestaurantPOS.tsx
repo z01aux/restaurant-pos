@@ -25,6 +25,11 @@ interface ConfirmModalProps {
   isDarkMode: boolean;
 }
 
+interface RestaurantPOSProps {
+  isDarkMode: boolean;
+  toggleTheme: () => void;
+}
+
 const PaymentOption: React.FC<PaymentOptionProps> = ({ value, label, selected, onSelect, isDarkMode }) => {
   const isEfectivo = value === 'efectivo';
   
@@ -73,7 +78,6 @@ const ConfirmModal: React.FC<ConfirmModalProps> = ({ isOpen, title, message, onC
     <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center animate-fadeIn">
       <div className={`fixed inset-0 ${isDarkMode ? 'bg-black/70' : 'bg-black/40'}`} onClick={onCancel} />
       <div className={`relative ${bgStyles} ${isMobile ? 'rounded-t-2xl w-full' : 'rounded-lg w-80'} max-w-[95%] border overflow-hidden`}>
-        {/* Cuadrícula de fondo en el modal */}
         <div className={`absolute inset-0 ${gridStyles} bg-[size:20px_20px] pointer-events-none opacity-20`} />
         
         <div className="relative p-5">
@@ -108,7 +112,9 @@ const ConfirmModal: React.FC<ConfirmModalProps> = ({ isOpen, title, message, onC
   );
 };
 
-const RestaurantPOS: React.FC = () => {
+const RestaurantPOS: React.FC<RestaurantPOSProps> = ({ isDarkMode: externalIsDarkMode, toggleTheme }) => {
+  // Usar el tema que viene de App
+  const [isDarkMode, setIsDarkMode] = useState(externalIsDarkMode);
   const [clients, setClients] = useState<Client[]>([
     { id: 1, name: '', paymentMethod: '', amount: '' },
   ]);
@@ -119,34 +125,11 @@ const RestaurantPOS: React.FC = () => {
     isOpen: false,
     onConfirm: () => {},
   });
-  
-  // Cargar tema guardado del localStorage al iniciar
-  const [isDarkMode, setIsDarkMode] = useState(() => {
-    const savedTheme = localStorage.getItem('theme');
-    if (savedTheme) {
-      return savedTheme === 'dark';
-    }
-    // Opcional: detectar preferencia del sistema
-    return window.matchMedia('(prefers-color-scheme: dark)').matches;
-  });
 
-  const toggleTheme = () => {
-    setIsDarkMode(!isDarkMode);
-  };
-
-  // Guardar tema en localStorage cuando cambie
+  // Sincronizar cuando cambie desde App
   useEffect(() => {
-    localStorage.setItem('theme', isDarkMode ? 'dark' : 'light');
-  }, [isDarkMode]);
-
-  // Efecto para cambiar el theme-color dinámicamente
-  useEffect(() => {
-    const metaThemeColor = document.querySelector('meta[name="theme-color"]');
-    if (metaThemeColor) {
-      const newColor = isDarkMode ? '#030712' : '#ffffff';
-      metaThemeColor.setAttribute('content', newColor);
-    }
-  }, [isDarkMode]);
+    setIsDarkMode(externalIsDarkMode);
+  }, [externalIsDarkMode]);
 
   const updateDateTime = useCallback(() => {
     const now = new Date();
@@ -308,7 +291,6 @@ const RestaurantPOS: React.FC = () => {
       yPos += lineHeight;
       doc.text('generado por @jozzymar', pageWidth / 2, yPos, { align: 'center' });
 
-      // Nombre del archivo mejorado para móvil
       const dateForName = currentDateTime.date.replace(/\//g, '-');
       const timeForName = currentDateTime.time.replace(/:/g, '-');
       const fileName = `REG_VEN_${dateForName}_${timeForName}.pdf`;
@@ -454,7 +436,7 @@ const RestaurantPOS: React.FC = () => {
                     <th className={`px-3 py-2 text-left text-xs font-semibold ${textSecondaryStyles} w-48 transition-colors duration-300`}>Pago</th>
                     <th className={`px-3 py-2 text-left text-xs font-semibold ${textSecondaryStyles} w-24 transition-colors duration-300`}>Monto</th>
                     <th className="px-3 py-2 w-10"></th>
-                   </tr>
+                  </tr>
                 </thead>
                 <tbody className={`divide-y ${isDarkMode ? 'divide-gray-800' : 'divide-gray-100'}`}>
                   {clients.map((client, index) => (
