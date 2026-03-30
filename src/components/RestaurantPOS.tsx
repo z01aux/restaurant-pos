@@ -425,7 +425,7 @@ const RestaurantPOS: React.FC = () => {
                     <th className={`px-3 py-2 text-left text-xs font-semibold ${textSecondaryStyles} w-48 transition-colors duration-300`}>Pago</th>
                     <th className={`px-3 py-2 text-left text-xs font-semibold ${textSecondaryStyles} w-24 transition-colors duration-300`}>Monto</th>
                     <th className="px-3 py-2 w-10"></th>
-                   </tr>
+                  </tr>
                 </thead>
                 <tbody className={`divide-y ${isDarkMode ? 'divide-gray-800' : 'divide-gray-100'}`}>
                   {clients.map((client, index) => (
@@ -453,6 +453,8 @@ const RestaurantPOS: React.FC = () => {
                       <td className="px-3 py-2">
                         <input
                           type="text"
+                          inputMode="decimal"
+                          pattern="[0-9]*"
                           className={`w-full px-2 py-1 border rounded text-sm text-right font-semibold focus:outline-none transition-colors duration-300 ${inputStyles}`}
                           placeholder="0.00"
                           value={client.amount}
@@ -521,6 +523,8 @@ const RestaurantPOS: React.FC = () => {
                   <label className={`block text-xs font-medium ${textSecondaryStyles} mb-1`}>Monto (S/)</label>
                   <input
                     type="text"
+                    inputMode="decimal"
+                    pattern="[0-9]*"
                     className={`w-full px-4 py-3 rounded-xl border text-base text-right font-semibold focus:outline-none transition-all ${inputStyles}`}
                     placeholder="0.00"
                     value={client.amount}
