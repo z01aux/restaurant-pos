@@ -1,9 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import RestaurantPOS from './components/RestaurantPOS';
-import Login from './components/Login';
 
 const App: React.FC = () => {
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isDarkMode, setIsDarkMode] = useState(() => {
     const savedTheme = localStorage.getItem('theme');
     if (savedTheme) {
@@ -24,17 +22,9 @@ const App: React.FC = () => {
     }
   }, [isDarkMode]);
 
-  const handleLogin = () => {
-    setIsAuthenticated(true);
-  };
-
   const toggleTheme = () => {
     setIsDarkMode(!isDarkMode);
   };
-
-  if (!isAuthenticated) {
-    return <Login onLogin={handleLogin} isDarkMode={isDarkMode} toggleTheme={toggleTheme} />;
-  }
 
   return <RestaurantPOS isDarkMode={isDarkMode} toggleTheme={toggleTheme} />;
 };
