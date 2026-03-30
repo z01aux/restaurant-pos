@@ -5,7 +5,6 @@
     "module": "ESNext",
     "moduleResolution": "bundler",
     "allowSyntheticDefaultImports": true
-    // Eliminamos la línea "types": ["node"]
   },
   "include": ["vite.config.ts"]
 }
